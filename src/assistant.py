@@ -43,6 +43,15 @@ def change_contact(args, book:AddressBook):
     return f"Contact for {name} was changed."
 
 @input_error
+def delete_contact(args, book:AddressBook):
+    name, *_ = args
+    record = book.find(name) 
+    if record == None:
+        return "There is no such contact in the address book."
+    book.delete(name)
+    return f"Contact for {name} was deleted."  
+
+@input_error
 def show_phone(args, book:AddressBook):
     name = args[0]
     name = name.capitalize()
@@ -141,6 +150,7 @@ commands = {
     "hello": lambda args, book: "How can I help you?",
     "add": add_contact,
     "change": change_contact,
+    "delete": delete_contact,
     "phone": show_phone,
     "add-birthday": add_birthday,
     "show-birthday": show_birthday,
@@ -148,8 +158,8 @@ commands = {
     "add-email": add_email,
     "show-email": show_email,
     "add-address": add_address,
-    "show-address": show_address,
-    "all": show_all
+    "show-address": show_address, 
+    "all": show_all 
 }
 
 def main():
