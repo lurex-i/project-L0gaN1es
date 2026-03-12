@@ -9,15 +9,15 @@ from persistence import save_data, load_data
 def input_error(func):
     def inner(*args, **kwargs):
         try:
-            return func(*args, **kwargs)
-        except Exception as e:
-            return f"{e}"
+            return func(*args, **kwargs)  
         except ValueError:
             return "Enter the correct argument for the command."
         except KeyError:
             return "There's no such user in the phonebook."
         except IndexError:
             return "Enter contact's name after the command." 
+        except Exception as e:
+            return f"{e}"
     return inner
 
 @input_error
