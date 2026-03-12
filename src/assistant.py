@@ -7,7 +7,6 @@ import pickle
 import sys
 import keyboard
 from colorama import init, Fore, Style
-from typing import List
 
 
 class Field:
@@ -112,7 +111,7 @@ class AddressBook(UserDict):
         name = name.capitalize()
         del self.data[name]
 
-    def get_upcoming_birthdays(self):
+    def get_upcoming_birthdays(self, days = 7):
         res_user_list = []
         now = datetime.today().date()
         for rec in self.data.values():
@@ -124,7 +123,7 @@ class AddressBook(UserDict):
             if((closest_bday - now).days < 0):
                 closest_bday = date.replace(closest_bday, year=now.year + 1)
             # Check birthday is next 7 days includes today
-            if((closest_bday - now).days < 7):
+            if((closest_bday - now).days < days):
                 #Correct congradulation day in case birthday is at weekend
                 congr_day = closest_bday if closest_bday.weekday() < 5 else closest_bday + timedelta(days=7-closest_bday.weekday())
                 res_user_list.append({"name":rec.name.value, 
@@ -145,6 +144,8 @@ def input_error(func):
         except Exception as e:
             return f"{e}"
     return inner
+
+
 
 @input_error
 def add_contact(args, book:AddressBook):
@@ -248,15 +249,57 @@ commands = {
 }
 
 
+# @input_error
+def add_record(name:str, book:AddressBook):
+    # Check we have record
+    record = book.find(name)
+    if record:
+        raise Exception("We already have contact with such name")
+    record = Record(name)
+    book.add_record(record)
+    message = "Contact added"
+    return (message, record)
+
+# @input_error
+def find_record(name:str, book:AddressBook):
+    record = book.find(name)
+    if not record:
+        raise Exception(f"We don't have '{name}' contact")
+    message = f"Contact '{record.name.value}' found"
+    return (message, record)
+
+# @input_error
+def add_phone(name:str, record:Record):
+    # todo
+    return ("Phone added", record)
+
+# @input_error
+def del_phone(name:str, record:Record):
+    # todo
+    return ("Phone deleted", record)
+
+def get_birthdays(qnt:str, book:AddressBook):
+    message = ""
+    try:
+        cl_days = int(qnt)
+    except:
+        cl_days = 7
+        message += "It's not a number. I show birthdays for next week.\n"
+    for day in book.get_upcoming_birthdays(cl_days):
+        message += f'Congratulate {day["name"]} on {day["congratulation_date"]}\n'
+    if not message:
+        message = "There are no upcoming bithdays next week"
+    return (message, None)
+
 
 class MenuItem():
-    def __init__(self, key, name, input_text, hint, handler, exception):
+    def __init__(self, key, name, help="", hint="", handler=None, next_level=None):
         self.key = key
         self.name = name
-        self.input_text = input_text
+        self.help = help
         self.hint = hint
         self.handler = handler
-        self.exception = exception
+        self.next_level = next_level
 
     @staticmethod
     def get_one_key():
@@ -313,38 +356,93 @@ class MenuItem():
         return item.handler(buffer)
 
 
+class MenuLevel():
+    def __init__(self, name, items=[]):
+        self.name = name
+        self.items = items
+        self.obj = None
 
-def get_input_hint(hint:str):
-    buffer = ""
-    sys.stdout.write(Fore.LIGHTBLACK_EX + hint + Style.RESET_ALL)
-    sys.stdout.flush()
-    # return cursor back for the hint lenght
-    sys.stdout.write(f"\x1b[{len(hint)}D")
-    sys.stdout.flush()
+    # when we start menu level
+    def enter(self):
+        print(self.name)
+        for item in self.items:
+            print(f"{item.key}. {item.name}   ", end='')
+        print()
+    
+    @staticmethod
+    def get_one_key():
+        while True:
+            event = keyboard.read_event(suppress=True)
+            if event.event_type == keyboard.KEY_DOWN:
+                return event.name
+    
+    @staticmethod
+    def read_parameter() -> str:
+        buffer = ""
+        while True:
+            event = keyboard.read_event(suppress=True)
+            if event.event_type == keyboard.KEY_DOWN:
+                if event.name == "enter":
+                    sys.stdout.write("\n")
+                    sys.stdout.flush()
+                    break
+                elif event.name == "space":
+                    sys.stdout.write(" ")
+                    # sys.stdout.flush()
+                #todo - add esc combination 
+                elif event.name == "esc":
+                    raise item.exception
+                # simple symbol like letter or number
+                elif len(event.name) == 1:
+                    buffer += event.name
+                    # output symbol in default color to terminal
+                    sys.stdout.write(event.name)
+                    # sys.stdout.flush()
+                # delete previous symbol
+                elif event.name == "backspace" and buffer:
+                    buffer = buffer[:-1]
+                    # move cursor back and delete one symbol
+                    sys.stdout.write("\x1b[1D \x1b[1D")
+                    # sys.stdout.flush()
+                sys.stdout.flush()
+        return buffer
 
-    while True:
-        event = keyboard.read_event(suppress=True)
-        if event.event_type == keyboard.KEY_DOWN:
-            if event.name == "enter":
+    def set_object(self, obj):
+        self.obj = obj
+
+    def make_step(self):
+        while True:
+            pressed = MenuLevel.get_one_key()
+            if pressed in [x.key for x in self.items]:
                 break
-            elif event.name == "space":
-                sys.stdout.write(" ")
-            #todo - add esc combination 
+        # User select one of menu items. get object and run data input
+        for item in self.items:
+            if item.key == pressed:
+                break
 
-            # simple symbol like letter or number
-            elif len(event.name) == 1:
-                buffer += event.name
-                # output symbol in default color to terminal
-                sys.stdout.write(event.name)
-                sys.stdout.flush()
-            # delete previous symbol
-            elif event.name == "backspace" and buffer:
-                buffer = buffer[:-1]
-                # move cursor back and delete one symbol
-                sys.stdout.write("\x1b[1D \x1b[1D")
-                sys.stdout.flush()
+        if item.hint:
+            sys.stdout.write(Fore.LIGHTBLACK_EX + item.hint + Style.RESET_ALL)
+            sys.stdout.flush()
+            # return cursor back for the hint lenght
+            sys.stdout.write(f"\x1b[{len(item.hint)}D")
+            sys.stdout.flush()
 
-    return buffer
+        obj = None
+        next = item.next_level
+        if item.handler:
+            buffer = MenuLevel.read_parameter()
+            try:
+                message, obj = item.handler(buffer, self.obj)
+            except:
+                message, obj = ("Make custom field with exception info", None)
+                next = self
+            print(message) # todo
+
+        if obj and item.next_level:
+            item.next_level.set_object(obj)
+
+        return next
+
 
 
 def main():
@@ -365,41 +463,94 @@ def main():
     save_data(book)
 
 
-menu_items = [ 
-    MenuItem("1", "Add contact", 
-             input_text="Enter contact name:",
-             hint="John Snow", 
-             handler=lambda _:"dummy", 
-             exception=Exception("custom exception")), 
-    MenuItem("2", "Find contact", 
-             input_text="Enter contact name:",
-             hint="Harry Potter", 
-             handler = lambda x:print(f"**{x}**"), 
-             exception=Exception("custom exception")),
-    MenuItem("3", "Add note", 
-             input_text="Input your note. At the end press Enter twice",
-             hint="", 
-             handler=lambda _:"dummy", 
-             exception=Exception("custom exception")),
-    MenuItem("4", "Find note", 
-             input_text="Input notes tag you are looking for:",
-             hint="", 
-             handler=lambda _:"dummy", 
-             exception=Exception("custom exception"))]
+settings_menu = MenuLevel("Settings menu", [])
+record_menu = MenuLevel("Record menu", [])
+book_menu = MenuLevel("Address Book menu", [])
 
+def init_menu():
+    # Address book menu settings
+    book_menu.items.append(MenuItem("1", "Add contact", "Enter contact name:", hint="John Snow", 
+                                    handler=add_record, next_level=record_menu))
+    book_menu.items.append(MenuItem("2", "Find contact", "Enter contact name:", hint="John Snow", 
+                                    handler=find_record, next_level=record_menu))
+    book_menu.items.append(MenuItem("3", "Find phone", "Enter phone number:", hint="0xxxxxxxxx", 
+                                    # handler=find_phone, 
+                                    next_level=record_menu))
+    book_menu.items.append(MenuItem("4", "Add note", "Enter tags;note text:", hint="tag1,tag2; Remember this!", 
+                                    # handler=add_note, 
+                                    next_level=book_menu))
+    book_menu.items.append(MenuItem("5", "Find note", "Enter tag/tags:", hint="tag1[,tag2]",
+                                    # handler=find_note, 
+                                    next_level=book_menu))
+    book_menu.items.append(MenuItem("7", "Closest birthdays", "How many days of the closest birthdays you want? ",
+                                    handler=get_birthdays, next_level=book_menu))
+    book_menu.items.append(MenuItem("8", "Settings", "",
+                                    next_level=settings_menu))
+    book_menu.items.append(MenuItem("0", "Exit"))
+    # Record menu items
+    record_menu.items.append(MenuItem("1", "Add phone", "Enter phone number:", hint="0xxxxxxxxx", 
+                                      handler=add_phone, next_level=record_menu))
+    record_menu.items.append(MenuItem("2", "Del phone", "Enter phone number:", hint="0xxxxxxxxx", 
+                                      handler=del_phone, next_level=record_menu))
+    record_menu.items.append(MenuItem("3", "Set address", "Enter home address:", 
+                                    #   handler=set_address, 
+                                      next_level=record_menu))
+    record_menu.items.append(MenuItem("4", "Add mail", "Enter e-mail:", 
+                                    #   handler=set_mail, 
+                                      next_level=record_menu))
+    record_menu.items.append(MenuItem("5", "Del mail", "What e-mail do you want delete? ", 
+                                    #   handler=del_mail, 
+                                      next_level=record_menu))
+    record_menu.items.append(MenuItem("6", "Set birthday", "When he/she was born? ",  hint="DD.MM.YYYY",
+                                    #   handler=set_birthday, 
+                                      next_level=record_menu))
+    record_menu.items.append(MenuItem("0", "Back", next_level=book_menu))
+    # Settings menu items
+    settings_menu.items.append(MenuItem("1", "Set family's tax: ", "Input average amount for a gift: ", 
+                                    #   handler=set_family_tax, 
+                                      next_level=settings_menu))
+    settings_menu.items.append(MenuItem("2", "Set friend's tax: ", "Input average amount for a gift: ", 
+                                    #   handler=set_friend_tax, 
+                                      next_level=settings_menu))
+    settings_menu.items.append(MenuItem("3", "Set colleague's tax: ", "Input average amount for a gift: ", 
+                                    #   handler=set_colleague_tax, 
+                                      next_level=settings_menu))
+    settings_menu.items.append(MenuItem("0", "Back", next_level=book_menu))
 
 def main_alt():
+    book = load_data()
     init()
-    for item in menu_items:
-        print(f"{item.key}. {item.name}   ", end='')
-    print()
-    # inp = get_input_hint()
-    MenuItem.select_item(menu_items)
+    init_menu()
+    menu = book_menu
+    while menu:
+        menu.enter()
+        menu = menu.make_step()
 
-    # get_input_hint("(0xx)-xxx-xx-xx")
-    # get_input_hint("Name Surname")
-    # get_input_hint("YYYY.MM.DD")
+    print("Good bye!")
+
 
 if __name__ == "__main__":
     # main()
     main_alt()
+
+
+# Book - N records
+# 1. Add    2. Find name   3. Find phone   4. Add note  5.Find note   7. Closest birthdays   9. Settings
+# book.1.Add.Input.CallHandler.GoNextLev(input,obj)->MenuLevel(record)
+# book.2.Find.Input.CallHandler.GoNextLev(input,obj)->MenuLevel(record)
+# book.4.AddNote.InputTagNote.CallHandler.ReturnSameLevel->MenuLevel(book)
+# book.5.FindNote.InputTag.CallHandler->outputNote.ReturnSameLevel->MenuLevel(book)
+# book.7.ClosestB.InputDays.CallHandler->outputStats.ReturnSameLevel->MenuLevel(book)
+# book.9.Settings.->GoSettingLevel->MenuLevel(settings)
+
+# record.1.AddPhone.Input.CallHandler.SameLevel->MenuLevel(record)
+# record.2.DelPhone.Input.CallHandler.SameLevel->MenuLevel(record)
+# record.0.Back.GoUpperLev->MenuLevel(book)
+
+# setting.1.Set relative tax.Input.CallHandler.SameLevel->MenuLevel(settings)
+# setting.2.Set frien tax.Input.CallHandler.SameLevel->MenuLevel(settings)
+# setting.0.Back.GoUpperLev->MenuLevel(book)
+
+# Record - James Potter
+# 1. Add phone  2. Del phone  2. Add Mail  4. Del mail  5. Set address    6. Set birthday     0. Back
+
