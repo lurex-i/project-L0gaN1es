@@ -4,9 +4,8 @@ from datetime import date
 from datetime import timedelta
 import pickle
 
-import sys
-import keyboard
 from colorama import init, Fore, Style
+from menu import MenuItem, MenuLevel
 
 
 class Field:
@@ -237,6 +236,7 @@ def load_data(filename="addressbook.pkl"):
 def greating():
     print("Welcome to the assistant bot!")
 
+# todo - old command - remove
 commands = {
     "hello": lambda args, book: "How can I help you?",
     "add": add_contact,
@@ -291,160 +291,14 @@ def get_birthdays(qnt:str, book:AddressBook):
         message = "There are no upcoming bithdays next week"
     return (message, None)
 
+def show_book_info(book:add_record):
+    print(f"has {len(book)} records and N notes") # todo - notes size
 
-class MenuItem():
-    def __init__(self, key, name, help="", hint="", handler=None, next_level=None):
-        self.key = key
-        self.name = name
-        self.help = help
-        self.hint = hint
-        self.handler = handler
-        self.next_level = next_level
-
-    @staticmethod
-    def get_one_key():
-        while True:
-            event = keyboard.read_event(suppress=True)
-            if event.event_type == keyboard.KEY_DOWN:
-                return event.name
-
-    @staticmethod
-    def select_item(items:list):
-        buffer = ""
-
-        while True:
-            pressed = MenuItem.get_one_key()
-            if pressed in [x.key for x in items]:
-                break
-        # User select one of menu items. get object and run data input
-        for item in items:
-            if item.key == pressed:
-                break
-
-        if item.hint:
-            sys.stdout.write(Fore.LIGHTBLACK_EX + item.hint + Style.RESET_ALL)
-            sys.stdout.flush()
-            # return cursor back for the hint lenght
-            sys.stdout.write(f"\x1b[{len(item.hint)}D")
-            sys.stdout.flush()
-
-        while True:
-            event = keyboard.read_event(suppress=True)
-            if event.event_type == keyboard.KEY_DOWN:
-                if event.name == "enter":
-                    break
-                elif event.name == "space":
-                    sys.stdout.write(" ")
-                    # sys.stdout.flush()
-                #todo - add esc combination 
-                elif event.name == "esc":
-                    raise item.exception
-                # simple symbol like letter or number
-                elif len(event.name) == 1:
-                    buffer += event.name
-                    # output symbol in default color to terminal
-                    sys.stdout.write(event.name)
-                    # sys.stdout.flush()
-                # delete previous symbol
-                elif event.name == "backspace" and buffer:
-                    buffer = buffer[:-1]
-                    # move cursor back and delete one symbol
-                    sys.stdout.write("\x1b[1D \x1b[1D")
-                    # sys.stdout.flush()
-                sys.stdout.flush()
-        print()
-        return item.handler(buffer)
+def show_record_info(record:Record):
+    print(f"{record.name} [{record.phones}] born on {record.birthday}") # todo - colorama formated output
 
 
-class MenuLevel():
-    def __init__(self, name, items=[]):
-        self.name = name
-        self.items = items
-        self.obj = None
-
-    # when we start menu level
-    def enter(self):
-        print(self.name)
-        for item in self.items:
-            print(f"{item.key}. {item.name}   ", end='')
-        print()
-    
-    @staticmethod
-    def get_one_key():
-        while True:
-            event = keyboard.read_event(suppress=True)
-            if event.event_type == keyboard.KEY_DOWN:
-                return event.name
-    
-    @staticmethod
-    def read_parameter() -> str:
-        buffer = ""
-        while True:
-            event = keyboard.read_event(suppress=True)
-            if event.event_type == keyboard.KEY_DOWN:
-                if event.name == "enter":
-                    sys.stdout.write("\n")
-                    sys.stdout.flush()
-                    break
-                elif event.name == "space":
-                    sys.stdout.write(" ")
-                    # sys.stdout.flush()
-                #todo - add esc combination 
-                elif event.name == "esc":
-                    raise item.exception
-                # simple symbol like letter or number
-                elif len(event.name) == 1:
-                    buffer += event.name
-                    # output symbol in default color to terminal
-                    sys.stdout.write(event.name)
-                    # sys.stdout.flush()
-                # delete previous symbol
-                elif event.name == "backspace" and buffer:
-                    buffer = buffer[:-1]
-                    # move cursor back and delete one symbol
-                    sys.stdout.write("\x1b[1D \x1b[1D")
-                    # sys.stdout.flush()
-                sys.stdout.flush()
-        return buffer
-
-    def set_object(self, obj):
-        self.obj = obj
-
-    def make_step(self):
-        while True:
-            pressed = MenuLevel.get_one_key()
-            if pressed in [x.key for x in self.items]:
-                break
-        # User select one of menu items. get object and run data input
-        for item in self.items:
-            if item.key == pressed:
-                break
-
-        if item.hint:
-            sys.stdout.write(Fore.LIGHTBLACK_EX + item.hint + Style.RESET_ALL)
-            sys.stdout.flush()
-            # return cursor back for the hint lenght
-            sys.stdout.write(f"\x1b[{len(item.hint)}D")
-            sys.stdout.flush()
-
-        obj = None
-        next = item.next_level
-        if item.handler:
-            buffer = MenuLevel.read_parameter()
-            try:
-                message, obj = item.handler(buffer, self.obj)
-            except:
-                message, obj = ("Make custom field with exception info", None)
-                next = self
-            print(message) # todo
-
-        if obj and item.next_level:
-            item.next_level.set_object(obj)
-
-        return next
-
-
-
+# old main with set of commands
 def main():
     book = load_data()
     greating()
@@ -464,8 +318,8 @@ def main():
 
 
 settings_menu = MenuLevel("Settings menu", [])
-record_menu = MenuLevel("Record menu", [])
-book_menu = MenuLevel("Address Book menu", [])
+record_menu = MenuLevel("Record menu", [], show_record_info)
+book_menu = MenuLevel("Address Book menu", [], show_book_info)
 
 def init_menu():
     # Address book menu settings
@@ -522,35 +376,16 @@ def main_alt():
     init()
     init_menu()
     menu = book_menu
+    book_menu.set_object(book)
     while menu:
         menu.enter()
         menu = menu.make_step()
 
+    save_data(book)
     print("Good bye!")
 
 
 if __name__ == "__main__":
     # main()
     main_alt()
-
-
-# Book - N records
-# 1. Add    2. Find name   3. Find phone   4. Add note  5.Find note   7. Closest birthdays   9. Settings
-# book.1.Add.Input.CallHandler.GoNextLev(input,obj)->MenuLevel(record)
-# book.2.Find.Input.CallHandler.GoNextLev(input,obj)->MenuLevel(record)
-# book.4.AddNote.InputTagNote.CallHandler.ReturnSameLevel->MenuLevel(book)
-# book.5.FindNote.InputTag.CallHandler->outputNote.ReturnSameLevel->MenuLevel(book)
-# book.7.ClosestB.InputDays.CallHandler->outputStats.ReturnSameLevel->MenuLevel(book)
-# book.9.Settings.->GoSettingLevel->MenuLevel(settings)
-
-# record.1.AddPhone.Input.CallHandler.SameLevel->MenuLevel(record)
-# record.2.DelPhone.Input.CallHandler.SameLevel->MenuLevel(record)
-# record.0.Back.GoUpperLev->MenuLevel(book)
-
-# setting.1.Set relative tax.Input.CallHandler.SameLevel->MenuLevel(settings)
-# setting.2.Set frien tax.Input.CallHandler.SameLevel->MenuLevel(settings)
-# setting.0.Back.GoUpperLev->MenuLevel(book)
-
-# Record - James Potter
-# 1. Add phone  2. Del phone  2. Add Mail  4. Del mail  5. Set address    6. Set birthday     0. Back
 
