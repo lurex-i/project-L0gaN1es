@@ -6,8 +6,13 @@ from datetime import datetime
 from datetime import date
 from datetime import timedelta
 from record import Record
+from note import Note
 
 class AddressBook(UserDict):
+    def __init__(self):
+        super().__init__()
+        self.notes: list[Note] = []   
+
     def add_record(self, record: Record):
         self.data[record.name.value] = record
 
@@ -39,3 +44,33 @@ class AddressBook(UserDict):
                 res_user_list.append({"name":rec.name.value, 
                                       "congratulation_date":congr_day.strftime("%d.%m.%Y")})
         return res_user_list
+    
+    def add_note(self, note: Note):
+        if not note.text.strip():
+            raise ValueError("Note text cannot be empty.")
+        self.notes.append(note)
+
+    def delete_note(self, index: int):
+        if not (0 <= index < len(self.notes)):
+            raise IndexError("Note index is out of range.")
+        self.notes.pop(index)
+
+    def find_notes_by_text(self, keyword: str):
+        return [note for note in self.notes if keyword.lower() in note.text.lower()]
+
+    def find_notes_by_tag(self, tag: str):
+        if not tag.strip():
+            raise ValueError("Tag cannot be empty.")
+        return [note for note in self.notes if tag.lower() in note.tags]
+
+    def sort_notes_by_tag(self, tag: str):
+        if not tag.strip():
+            raise ValueError("Tag cannot be empty.")
+        return sorted(self.notes, key=lambda n: tag.lower() in n.tags, reverse=True)    
+    
+    def edit_note_text(self, index: int, new_text: str):
+        if not (0 <= index < len(self.notes)):
+            raise IndexError("Note index is out of range.")
+        if not new_text.strip():
+            raise ValueError("New text cannot be empty.")
+        self.notes[index].edit_text(new_text)
