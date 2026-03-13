@@ -21,6 +21,9 @@ class AddressBook(UserDict):
         if name in self.data.keys():
             return self.data[name]
         return None
+    
+    def search(self, query:str) -> list[Record]:
+        return [record for record in self.data.values() if record.query_match(query)]
 
     def delete(self, name:str):
         name = name.capitalize()

@@ -23,6 +23,13 @@ def input_error(func):
             return f"{e}"
     return inner
 
+def parse_input(user_input):
+    if not user_input:
+        return "", []
+    cmd, *args = user_input.split()
+    cmd = cmd.strip().lower()
+    return cmd, *args
+
 @input_error
 def add_contact(args, book:AddressBook):
     name, phone, *_ = args
@@ -136,12 +143,27 @@ def birthdays(args, book:AddressBook):
         message = "There are no upcoming bithdays next week"
     return message
 
-def parse_input(user_input):
-    if not user_input:
-        return "", []
-    cmd, *args = user_input.split()
-    cmd = cmd.strip().lower()
-    return cmd, *args
+@input_error
+def search_contacts(args, book:AddressBook):
+    field_separator = "-" * 20 + "\n"
+    delimiter = "#" * 20 + "\n"
+    query, *_ = args
+    lines = []
+    found_records = book.search(query)
+    for record in found_records:
+        name = record.name.value
+        phones = "\n".join(phone.value for phone in record.phones) if record.phones else "N/A"
+        birthday = str(record.birthday) if record.birthday else "N/A"
+        email = record.email.value if record.email else "N/A"
+        address = record.address.value if record.address else "N/A"
+        lines.append(f"Name:\n{name}\n" 
+                     + field_separator + f"Phone numbers:\n{phones}\n" 
+                     + field_separator + f"Email:\n{email}\n" 
+                     + field_separator + f"Birthday:\n{birthday}\n" 
+                     + field_separator + f"Address:\n{address}\n"
+                     + delimiter)
+    return "\n" + delimiter + "\n".join(lines) if lines else "No contacts found."
+    
 
 @input_error
 def  show_all(args, book:AddressBook):
@@ -236,7 +258,8 @@ commands = {
     "add-email": add_email,
     "show-email": show_email,
     "add-address": add_address,
-    "show-address": show_address, 
+    "show-address": show_address,
+    "search": search_contacts, 
     "all": show_all 
 }
 
@@ -267,9 +290,9 @@ def main():
                 print(execution_result)
         else:
             print("Invalid command.")
-            print("Use one of: hello, add, change, phone, all, add-birthday, show-birthday, birthdays," \
+            print("Use one of: hello, add, change, phone, search, all, add-birthday, show-birthday, birthdays," \
             " add-note, show-note, add-tag, del-note, find-note, find-tag, edit-note, sort-notes, exit/close")
-            print("Use one of: hello, add, change, phone, all, add-birthday, show-birthday, birthdays, add-email, show-email, add-address, show-address, exit/close")
+            print("Use one of: hello, add, change, phone, search, all, add-birthday, show-birthday, birthdays, add-email, show-email, add-address, show-address, exit/close")
   
 
 
@@ -387,5 +410,60 @@ def main_alt():
 
 
 if __name__ == "__main__":
+
+    #book = AddressBook()
+
+    #record1 = Record("Anna Smith")
+    #record1.add_phone("0501234567")
+    #record1.add_phone("0677654321")
+    #record1.add_email("anna.smith@gmail.com")
+    #record1.add_birthday("12.03.1995")
+    #book.add_record(record1)
+
+    #record2 = Record("Bob Carter")
+    #record2.add_phone("0991112233")
+    #book.add_record(record2)
+
+    #record3 = Record("Carol Johnson")
+    #record3.add_phone("0639876543")
+    #record3.add_email("carol.work@yahoo.com")
+    #record3.add_birthday("01.11.1988")
+    #record3.add_address("12 Main Street")
+    #book.add_record(record3)
+
+    #record4 = Record("Daniel Brown")
+    #record4.add_phone("0500000000")
+    #record4.add_email("daniel.brown@company.com")
+    #book.add_record(record4)
+
+    #record5 = Record("Eva Stone")
+    #record5.add_email("eva.stone@gmail.com")
+    #record5.add_birthday("25.12.2000")
+    #book.add_record(record5)
+
+    #test_queries = [
+    #    "anna",
+    #    "smith",
+    #    "050",
+    #    "7654",
+    #    "gmail",
+    #    "yahoo",
+    #    "company",
+    #    "1995",
+    #    "1988",
+    #    "25.12",
+    #    "01.11.1988",
+    #    "telegram",
+    #]
+
+    #for query in test_queries:
+    #    print(f"\nSEARCH: {query}")
+    #    results = book.search(query)
+    #    if results:
+    #        for record in results:
+    #            print(record)
+    #    else:
+    #        print("No contacts found.")
+    
     main()
-    # main_alt()
+    #main_alt()
