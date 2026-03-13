@@ -10,11 +10,7 @@ def load_images_from_folder(folder_path):
                 images.append(file.read())
     return images
 
-start_images = load_images_from_folder("src\img")
-exit_images = load_images_from_folder("src\img")
+images = load_images_from_folder("src\img")
 
-def random_start_image():
-    return random.choice(start_images)
-
-def random_exit_image():
-    return random.choice(exit_images)
+def random_image():
+    return random.choice(images)
