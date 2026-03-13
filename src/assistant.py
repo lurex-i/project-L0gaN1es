@@ -8,7 +8,7 @@ from persistence import save_data, load_data
 from note import Note
 from colorama import init, Fore, Style
 from menu import MenuItem, MenuLevel
-from screensaver import random_start_image, random_exit_image
+from screensaver import random_image
 
 def input_error(func):
     def inner(*args, **kwargs):
@@ -244,7 +244,7 @@ commands = {
 def main():
     # Get book (loaded or new) and message from load_data
     book, execution_result = load_data()
-    print(random_start_image())
+    print(random_image())
     print("Welcome to the assistant bot!")
     # Warn user if we can't load book from file and use new one
     print(execution_result)
@@ -256,7 +256,7 @@ def main():
             # Try to save book before exit
             # If we can't save, print error message
             execution_result = save_data(book)
-            print(random_exit_image())
+            print(random_image())
             if execution_result:
                 print(execution_result)
             print("Good bye!")
@@ -378,7 +378,7 @@ def main_alt():
     book = load_data()
     init()
     init_menu()
-    print(random_start_image())
+    print(random_image())
     menu = book_menu
     book_menu.set_object(book)
     while menu:
@@ -386,7 +386,7 @@ def main_alt():
         menu = menu.make_step()
 
     save_data(book)
-    print(random_exit_image())
+    print(random_image())
     print("Good bye!")
 
 
