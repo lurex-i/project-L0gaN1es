@@ -3,18 +3,28 @@
 from name import Name
 from phone import Phone
 from birthday import Birthday
+from email_address import EmailAddress  
+from address import Address
 
 class Record:
     def __init__(self, name):
         self.name = Name(name)
         self.phones = []
         self.birthday = None
+        self.email = None
+        self.address = None
 
     def __str__(self):
         return f"Contact name: {self.name.value}, phones: {'; '.join(p.value for p in self.phones)}"
 
     def add_birthday(self, birthday:str):
         self.birthday = Birthday(birthday)
+
+    def add_email(self, email:str):
+        self.email = EmailAddress(email)
+
+    def add_address(self, address:str):
+        self.address = Address(address)
     
     def add_phone(self, phone_num: str):
         if not phone_num in [phone.value for phone in self.phones]:
@@ -34,3 +44,9 @@ class Record:
             if phone.value == phone_num:
                 return phone
         return None
+    
+    if __name__ == "__main__":
+        address1 = Address("app65, str. Main")
+        address2 = Address(" ")
+        print(address1)
+        print(address2)
