@@ -50,6 +50,7 @@ class MenuLevel():
                     break
                 elif event.name == "space":
                     sys.stdout.write(" ")
+                    buffer += " "
                     # sys.stdout.flush()
                 #todo - add esc combination 
                 elif event.name == "esc":
@@ -107,5 +108,9 @@ class MenuLevel():
 
         if obj and item.next_level:
             item.next_level.set_object(obj)
+
+        # todo ???? - it fixes fake enter to down level, but other cases ????
+        # if not obj and item.next_level:
+        #     return self.obj
 
         return next
