@@ -6,6 +6,8 @@ from record import Record
 from address_book import AddressBook
 from persistence import save_data, load_data
 from note import Note
+from colorama import init, Fore, Style
+from menu import MenuItem, MenuLevel
 
 def input_error(func):
     def inner(*args, **kwargs):
@@ -270,6 +272,52 @@ def main():
             print("Use one of: hello, add, change, phone, all, add-birthday, show-birthday, birthdays, add-email, show-email, add-address, show-address, exit/close")
   
 
+
+def add_record(name:str, book:AddressBook):
+    # Check we have record
+    record = book.find(name)
+    if record:
+        raise Exception("We already have contact with such name")
+    record = Record(name)
+    book.add_record(record)
+    message = f"Contact {name} added"
+    return (message, record)
+
+def find_record(name:str, book:AddressBook):
+    record = book.find(name)
+    if not record:
+        raise Exception(f"We don't have '{name}' contact")
+    message = f"Contact '{record.name.value}' found"
+    return (message, record)
+
+def add_phone(name:str, record:Record):
+    # todo
+    return ("Phone added", record)
+
+def del_phone(name:str, record:Record):
+    # todo
+    return ("Phone deleted", record)
+
+def get_birthdays(qnt:str, book:AddressBook):
+    message = ""
+    try:
+        cl_days = int(qnt)
+    except:
+        cl_days = 7
+        message += "It's not a number. I show birthdays for next week.\n"
+    for day in book.get_upcoming_birthdays(cl_days):
+        message += f'Congratulate {day["name"]} on {day["congratulation_date"]}\n'
+    if not message:
+        message = "There are no upcoming bithdays next week"
+    return (message, None)
+
+def show_book_info(book:AddressBook):
+    print(f"has {len(book)} records and N notes") # todo - notes size
+
+def show_record_info(record:Record):
+    print(f"{record.name} [{record.phones}] born on {record.birthday}") # todo - colorama formated output
+
+
 settings_menu = MenuLevel("Settings menu", [])
 record_menu = MenuLevel("Record menu", [], show_record_info)
 book_menu = MenuLevel("Address Book menu", [], show_book_info)
@@ -339,5 +387,5 @@ def main_alt():
 
 
 if __name__ == "__main__":
-    # main()
-    main_alt()
+    main()
+    # main_alt()
