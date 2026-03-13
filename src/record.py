@@ -45,6 +45,21 @@ class Record:
                 return phone
         return None
     
+    def query_match(self, query: str) -> bool:
+        query = query.lower()
+
+        # Get all phone numbers as strings from phones
+        phone_values = [phone.value for phone in self.phones]
+
+        # Prepare string representations for each required field
+        str_reps = [
+            self.name.value.lower(),
+            self.email.value.lower() if self.email else "",
+            str(self.birthday) if self.birthday else ""
+        ] + phone_values
+        
+        return any(query in rep for rep in str_reps)
+
     if __name__ == "__main__":
         address1 = Address("app65, str. Main")
         address2 = Address(" ")
