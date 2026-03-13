@@ -8,6 +8,7 @@ from persistence import save_data, load_data
 from note import Note
 from colorama import init, Fore, Style
 from menu import MenuItem, MenuLevel
+from screensaver import random_image
 
 def input_error(func):
     def inner(*args, **kwargs):
@@ -22,13 +23,6 @@ def input_error(func):
         except Exception as e:
             return f"{e}"
     return inner
-
-def parse_input(user_input):
-    if not user_input:
-        return "", []
-    cmd, *args = user_input.split()
-    cmd = cmd.strip().lower()
-    return cmd, *args
 
 @input_error
 def add_contact(args, book:AddressBook):
@@ -144,27 +138,12 @@ def birthdays(args, book:AddressBook):
         message = f"There are no upcoming bithdays in the next {period} days."
     return message
 
-@input_error
-def search_contacts(args, book:AddressBook):
-    field_separator = "-" * 20 + "\n"
-    delimiter = "#" * 20 + "\n"
-    query, *_ = args
-    lines = []
-    found_records = book.search(query)
-    for record in found_records:
-        name = record.name.value
-        phones = "\n".join(phone.value for phone in record.phones) if record.phones else "N/A"
-        birthday = str(record.birthday) if record.birthday else "N/A"
-        email = record.email.value if record.email else "N/A"
-        address = record.address.value if record.address else "N/A"
-        lines.append(f"Name:\n{name}\n" 
-                     + field_separator + f"Phone numbers:\n{phones}\n" 
-                     + field_separator + f"Email:\n{email}\n" 
-                     + field_separator + f"Birthday:\n{birthday}\n" 
-                     + field_separator + f"Address:\n{address}\n"
-                     + delimiter)
-    return "\n" + delimiter + "\n".join(lines) if lines else "No contacts found."
-    
+def parse_input(user_input):
+    if not user_input:
+        return "", []
+    cmd, *args = user_input.split()
+    cmd = cmd.strip().lower()
+    return cmd, *args
 
 @input_error
 def  show_all(args, book:AddressBook):
@@ -259,14 +238,14 @@ commands = {
     "add-email": add_email,
     "show-email": show_email,
     "add-address": add_address,
-    "show-address": show_address,
-    "search": search_contacts, 
+    "show-address": show_address, 
     "all": show_all 
 }
 
 def main():
     # Get book (loaded or new) and message from load_data
     book, execution_result = load_data()
+    print(random_image())
     print("Welcome to the assistant bot!")
     # Warn user if we can't load book from file and use new one
     print(execution_result)
@@ -278,6 +257,7 @@ def main():
             # Try to save book before exit
             # If we can't save, print error message
             execution_result = save_data(book)
+            print(random_image())
             if execution_result:
                 print(execution_result)
             print("Good bye!")
@@ -291,10 +271,9 @@ def main():
                 print(execution_result)
         else:
             print("Invalid command.")
-            print("Use one of: hello, add, change, phone, search, all, add-birthday, show-birthday, birthdays," \
-            " add-note, show-note, add-tag, del-note, find-note, find-tag, edit-note, sort-notes, exit/close")
-            print("Use one of: hello, add, change, phone, search, all, add-birthday, show-birthday, birthdays, add-email, show-email, add-address, show-address, exit/close")
-  
+            print("Use one of: hello, add, change, phone, all, add-birthday, show-birthday, birthdays," \
+            " add-note, show-note, add-tag, del-note, find-note, find-tag, edit-note, sort-notes," \
+            "add-email, show-email, add-address, show-address, exit/close")
 
 
 def add_record(name:str, book:AddressBook):
@@ -400,6 +379,7 @@ def main_alt():
     book = load_data()
     init()
     init_menu()
+    print(random_image())
     menu = book_menu
     book_menu.set_object(book)
     while menu:
@@ -407,9 +387,10 @@ def main_alt():
         menu = menu.make_step()
 
     save_data(book)
+    print(random_image())
     print("Good bye!")
 
 
 if __name__ == "__main__":
     main()
-    #main_alt()
+    # main_alt()
