@@ -5,6 +5,7 @@
 from record import Record
 from address_book import AddressBook
 from persistence import save_data, load_data
+from note import Note
 
 def input_error(func):
     def inner(*args, **kwargs):
@@ -14,8 +15,13 @@ def input_error(func):
             return "Enter the correct argument for the command."
         except KeyError:
             return "There's no such user in the phonebook."
+<<<<<<< feature/note/tag
+        except IndexError as i:
+            return str(i) if str(i) else "Missing or invalid index."
+=======
         except IndexError:
             return "Enter contact's name after the command." 
+>>>>>>> main
         except Exception as e:
             return f"{e}"
     return inner
@@ -147,6 +153,80 @@ def  show_all(args, book:AddressBook):
         message += f"{name} : {phone}\n"
     return message 
 
+@input_error
+def add_note_cmd(args, book: AddressBook):
+    text = " ".join(args)
+    if not text.strip():
+        raise ValueError("Note text cannot be empty.")
+    note = Note(text)
+    book.add_note(note)
+    return "Note added."
+
+@input_error
+def add_tag_cmd(args, book: AddressBook):
+    index = int(args[0])
+    tag = args[1]
+
+    if not tag.strip():
+        raise ValueError("Tag cannot be empty.")
+    if not (0 <= index < len(book.notes)):
+        raise IndexError("Note index is out of range.")
+
+    book.notes[index].add_tag(tag)
+    return "Tag added."
+
+@input_error
+def del_note_cmd(args, book: AddressBook):
+    if not args:
+        raise IndexError("Enter note index after the command.")
+    
+    try:
+        index = int(args[0])
+    except ValueError:
+        raise ValueError("Index must be a number.")
+
+    book.delete_note(index)
+    return "Note deleted."
+
+@input_error
+def find_note_cmd(args, book: AddressBook):
+    keyword = " ".join(args)
+
+    if not keyword.strip():
+        raise ValueError("Search keyword cannot be empty.")
+
+    results = book.find_notes_by_text(keyword)
+    return "\n".join(str(n) for n in results) if results else "No notes found."
+
+@input_error
+def find_tag_cmd(args, book: AddressBook):
+    tag = args[0]
+
+    if not tag.strip():
+        raise ValueError("Tag cannot be empty.")
+
+    results = book.find_notes_by_tag(tag)
+    return "\n".join(str(n) for n in results) if results else "No notes with such tag."
+
+def show_notes_cmd(args, book: AddressBook):
+    if not book.notes:
+        return "No notes yet."
+    return "\n".join(f"{i}: {note}" for i, note in enumerate(book.notes))
+
+@input_error
+def edit_note_cmd(args, book: AddressBook):
+    if len(args) < 2:
+        return "Give me index and new text please."
+    
+    index = int(args[0])
+    new_text = " ".join(args[1:])
+    
+    book.edit_note_text(index, new_text)
+    return f"Note {index} updated."
+
+def sort_notes_cmd(args, book: AddressBook):
+    return book.sort_notes_by_tags()
+
 commands = {
     "hello": lambda args, book: "How can I help you?",
     "add": add_contact,
@@ -156,11 +236,23 @@ commands = {
     "add-birthday": add_birthday,
     "show-birthday": show_birthday,
     "birthdays": birthdays,
+<<<<<<< feature/note/tag
+    "all":  show_all,
+    "add-note": add_note_cmd,
+    "show-notes": show_notes_cmd,
+    "add-tag": add_tag_cmd,
+    "del-note": del_note_cmd,
+    "find-note": find_note_cmd,
+    "find-tag": find_tag_cmd,
+    "edit-note": edit_note_cmd,
+    "sort-notes": sort_notes_cmd
+=======
     "add-email": add_email,
     "show-email": show_email,
     "add-address": add_address,
     "show-address": show_address, 
     "all": show_all 
+>>>>>>> main
 }
 
 def main():
@@ -190,7 +282,12 @@ def main():
                 print(execution_result)
         else:
             print("Invalid command.")
+<<<<<<< feature/note/tag
+            print("Use one of: hello, add, change, phone, all, add-birthday, show-birthday, birthdays," \
+            " add-note, show-note, add-tag, del-note, find-note, find-tag, edit-note, sort-notes, exit/close")
+=======
             print("Use one of: hello, add, change, phone, all, add-birthday, show-birthday, birthdays, add-email, show-email, add-address, show-address, exit/close")
+>>>>>>> main
 
 
 if __name__ == "__main__":
