@@ -217,7 +217,7 @@ def main():
         else:
             print("Invalid command.")
             print("Use one of: hello, add, change, phone, all, add-birthday, show-birthday, birthdays," \
-            " add-note, show-note, add-tag, del-note, find-note, find-tag, edit-note, exit/close")
+            " add-note, show-note, add-tag, del-note, find-note, find-tag, edit-note, sort-notes, exit/close")
 
 
 if __name__ == "__main__":
