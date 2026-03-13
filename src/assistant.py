@@ -82,8 +82,9 @@ def show_email(args, book:AddressBook):
     return f"{name} : {record.email}"
 
 @input_error
-def add_address(args, book:AddressBook):
-    name, address, *_ = args
+def add_address(args, book:AddressBook):   
+    name, *address = args
+    address = " ".join(address)
     record = book.find(name)
     message = ""
     if record == None:

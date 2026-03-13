@@ -46,7 +46,7 @@ class Record:
         return None
     
     if __name__ == "__main__":
-        address1 = Address("app/65,str/Main.")
+        address1 = Address("app65, str. Main")
         address2 = Address(" ")
         print(address1)
         print(address2)
