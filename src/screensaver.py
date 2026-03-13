@@ -1,59 +1,20 @@
 import random
+import os
 
-start_image = [
-    r"""
-    +----------------------+
-    |  CONTACT-BOT READY   |
-    |     WHAT'S THE PLAN? |
-    +----------------------+
-    """,
-    r"""
-    +----------------+
-    |    ASSISTANT   |
-    |     ONLINE     |
-    +----------------+
-    """,
-    r"""
-    +----------------+
-    |   LOADING…     |
-    |  CONTACT DATA  |
-    |     PLEASE     |
-    |      WAIT      |
-    +----------------+
-    """
-]
+def load_images_from_folder(folder_path):
+    images = []
+    for filename in os.listdir(folder_path):
+        if filename.endswith(".txt"):
+            full_path = os.path.join(folder_path, filename)
+            with open(full_path, "r", encoding="utf-8") as file:
+                images.append(file.read())
+    return images
 
-exit_image = [
-    r"""
-    +----------------------+
-    |    BOT IS SLEEPING   |
-    |     DO NOT WAKE UP   |
-    +----------------------+
-    """,
-    r"""
-    +----------------------+
-    |       I'M OUT…       |
-    |     CLEAN UP LATER   |
-    +----------------------+
-    """,
-    r"""
-    +----------------+
-    |  CONTACT BOT   |
-    |    SAVED ✓     |
-    |    CLOSED      |
-    +----------------+
-    """,
-    r"""
-    +----------------+
-    |    SESSION     |
-    |    FINISHED    |
-    |      ✓         |
-    +----------------+
-    """
-]
+start_images = load_images_from_folder("src\img")
+exit_images = load_images_from_folder("src\img")
 
 def random_start_image():
-    return random.choice(start_image)
+    return random.choice(start_images)
 
 def random_exit_image():
-    return random.choice(exit_image)
+    return random.choice(exit_images)

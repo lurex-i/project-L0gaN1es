@@ -378,6 +378,7 @@ def main_alt():
     book = load_data()
     init()
     init_menu()
+    print(random_start_image())
     menu = book_menu
     book_menu.set_object(book)
     while menu:
@@ -385,6 +386,7 @@ def main_alt():
         menu = menu.make_step()
 
     save_data(book)
+    print(random_exit_image())
     print("Good bye!")
 
 
