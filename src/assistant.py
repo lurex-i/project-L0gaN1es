@@ -137,10 +137,11 @@ def show_birthday(args, book:AddressBook):
 @input_error
 def birthdays(args, book:AddressBook):
     message = ""
-    for day in book.get_upcoming_birthdays():
+    period = args[0] if args else "7"
+    for day in book.get_upcoming_birthdays(period):
         message += f'Congratulate {day["name"]} on {day["congratulation_date"]}\n'
     if not message:
-        message = "There are no upcoming bithdays next week"
+        message = f"There are no upcoming bithdays in the next {period} days."
     return message
 
 @input_error
