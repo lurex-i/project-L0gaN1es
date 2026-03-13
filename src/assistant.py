@@ -1,150 +1,25 @@
-from collections import UserDict
-from datetime import datetime
-from datetime import date
-from datetime import timedelta
-import pickle
+# Main script to launch assistant bot via CLI. 
+# Uses Record and AddressBook classes directly
+# Uses persistence.py for save/load operations
 
-from colorama import init, Fore, Style
-from menu import MenuItem, MenuLevel
-
-
-class Field:
-    def __init__(self, value):
-        self.value = value
-
-    def __str__(self):
-        return str(self.value)
-
-
-class Name(Field):
-    # реалізація класу
-    def __init__(self, value:str):
-        if value and len(value) > 1:
-            super().__init__(value.capitalize())
-        else:
-            raise Exception("Enter correct name for the contact")
-
-
-class Phone(Field):
-    def __init__(self, value:str):
-        self.__value = None
-        self.value = value
-    
-    @property
-    def value(self):
-        return self.__value
-
-    @value.setter
-    def value(self, val):
-        if len(val) != 10 or not all(sym.isdigit() for sym in val):
-            raise Exception("Phone number must be 10 digit format")
-        self.__value = val
-
-
-class Birthday(Field):
-    def __init__(self, value):
-        self.__value = None
-        try:
-            self.value = datetime.strptime(value, "%d.%m.%Y").date()
-        except ValueError:
-            raise Exception("Invalid date format. Use DD.MM.YYYY")
-    
-    @property
-    def value(self):
-        return self.__value
-
-    @value.setter
-    def value(self, val:date):
-        year_now = datetime.now().date().year
-        if val.year > year_now or val.year < year_now - 120:
-            raise Exception("You made an error in the birthday's year.")
-        self.__value = val
-    
-    def __str__(self):
-        return self.value.strftime("%d.%m.%Y")
-
-
-class Record:
-    def __init__(self, name):
-        self.name = Name(name)
-        self.phones = []
-        self.birthday = None
-
-    def __str__(self):
-        return f"Contact name: {self.name.value}, phones: {'; '.join(p.value for p in self.phones)}"
-
-    def add_birthday(self, birthday:str):
-        self.birthday = Birthday(birthday)
-    
-    def add_phone(self, phone_num: str):
-        if not phone_num in [phone.value for phone in self.phones]:
-            self.phones.append(Phone(phone_num))
-
-    def remove_phone(self, phone_num: str):
-        self.phones.remove(self.find_phone(phone_num))
-
-    def edit_phone(self, old_num, new_num):
-        for index, phone in enumerate(self.phones):
-            if phone.value == old_num:
-                self.phones[index] = Phone(new_num)
-                break
-
-    def find_phone(self, phone_num: Phone):
-        for phone in self.phones:
-            if phone.value == phone_num:
-                return phone
-        return None
-
-
-class AddressBook(UserDict):
-    def add_record(self, record: Record):
-        self.data[record.name.value] = record
-
-    def find(self, name:str) -> Record:
-        name = name.capitalize()
-        if name in self.data.keys():
-            return self.data[name]
-        return None
-
-    def delete(self, name:str):
-        name = name.capitalize()
-        del self.data[name]
-
-    def get_upcoming_birthdays(self, days = 7):
-        res_user_list = []
-        now = datetime.today().date()
-        for rec in self.data.values():
-            if not rec.birthday.value:
-                continue
-            closest_bday = rec.birthday.value
-            closest_bday = date.replace(closest_bday, year=now.year)
-            # Check if birthday is in the past already and move it in the future
-            if((closest_bday - now).days < 0):
-                closest_bday = date.replace(closest_bday, year=now.year + 1)
-            # Check birthday is next 7 days includes today
-            if((closest_bday - now).days < days):
-                #Correct congradulation day in case birthday is at weekend
-                congr_day = closest_bday if closest_bday.weekday() < 5 else closest_bday + timedelta(days=7-closest_bday.weekday())
-                res_user_list.append({"name":rec.name.value, 
-                                      "congratulation_date":congr_day.strftime("%d.%m.%Y")})
-        return res_user_list
-
+from record import Record
+from address_book import AddressBook
+from persistence import save_data, load_data
+from note import Note
 
 def input_error(func):
     def inner(*args, **kwargs):
         try:
-            return func(*args, **kwargs)
+            return func(*args, **kwargs)  
         except ValueError:
             return "Enter the correct argument for the command."
         except KeyError:
             return "There's no such user in the phonebook."
         except IndexError:
-            return "Enter contact's name after the command."
+            return "Enter contact's name after the command." 
         except Exception as e:
             return f"{e}"
     return inner
-
-
 
 @input_error
 def add_contact(args, book:AddressBook):
@@ -169,6 +44,15 @@ def change_contact(args, book:AddressBook):
     return f"Contact for {name} was changed."
 
 @input_error
+def delete_contact(args, book:AddressBook):
+    name, *_ = args
+    record = book.find(name) 
+    if record == None:
+        return "There is no such contact in the address book."
+    book.delete(name)
+    return f"Contact for {name} was deleted."  
+
+@input_error
 def show_phone(args, book:AddressBook):
     name = args[0]
     name = name.capitalize()
@@ -176,6 +60,49 @@ def show_phone(args, book:AddressBook):
     if record == None:
         return "There is no such contact in the address book."
     return f"{name} : {book[name]}."
+
+@input_error
+def add_email(args, book:AddressBook):
+    name, email, *_ = args
+    record = book.find(name)
+    message = ""
+    if record == None:
+        record = Record(name)
+        book.add_record(record)
+        message += "New contact was created. "
+    record.add_email(email)
+    message += f"Email at {record.email} for {name} was added."
+    return message
+
+@input_error
+def show_email(args, book:AddressBook):
+    name, *_ = args
+    record = book.find(name)
+    if record == None:
+        return f"There is no {name} in the address book."
+    return f"{name} : {record.email}"
+
+@input_error
+def add_address(args, book:AddressBook):   
+    name, *address = args
+    address = " ".join(address)
+    record = book.find(name)
+    message = ""
+    if record == None:
+        record = Record(name)
+        book.add_record(record)
+        message += "New contact was created. "
+    record.add_address(address)
+    message += f"Address at {record.address} for {name} was added."
+    return message
+
+@input_error
+def show_address(args, book:AddressBook):
+    name, *_ = args
+    record = book.find(name)
+    if record == None:
+        return f"There is no {name} in the address book."
+    return f"{name} : {record.address}" 
 
 @input_error
 def add_birthday(args, book:AddressBook):
@@ -216,106 +143,132 @@ def parse_input(user_input):
 
 @input_error
 def  show_all(args, book:AddressBook):
-    message = ""
+    message = "" 
     for name, phone in book.items():
         message += f"{name} : {phone}\n"
-    return message
+    return message 
 
-def save_data(book, filename="addressbook.pkl"):
-    with open(filename, "wb") as f:
-        pickle.dump(book, f)
+@input_error
+def add_note_cmd(args, book: AddressBook):
+    text = " ".join(args)
+    if not text.strip():
+        raise ValueError("Note text cannot be empty.")
+    note = Note(text)
+    book.add_note(note)
+    return "Note added."
 
+@input_error
+def add_tag_cmd(args, book: AddressBook):
+    index = int(args[0])
+    tag = args[1]
 
-def load_data(filename="addressbook.pkl"):
+    if not tag.strip():
+        raise ValueError("Tag cannot be empty.")
+    if not (0 <= index < len(book.notes)):
+        raise IndexError("Note index is out of range.")
+
+    book.notes[index].add_tag(tag)
+    return "Tag added."
+
+@input_error
+def del_note_cmd(args, book: AddressBook):
+    if not args:
+        raise IndexError("Enter note index after the command.")
+    
     try:
-        with open(filename, "rb") as f:
-            return pickle.load(f)
-    except FileNotFoundError:
-        return AddressBook()
+        index = int(args[0])
+    except ValueError:
+        raise ValueError("Index must be a number.")
 
-def greating():
-    print("Welcome to the assistant bot!")
+    book.delete_note(index)
+    return "Note deleted."
 
-# todo - old command - remove
+@input_error
+def find_note_cmd(args, book: AddressBook):
+    keyword = " ".join(args)
+
+    if not keyword.strip():
+        raise ValueError("Search keyword cannot be empty.")
+
+    results = book.find_notes_by_text(keyword)
+    return "\n".join(str(n) for n in results) if results else "No notes found."
+
+@input_error
+def find_tag_cmd(args, book: AddressBook):
+    tag = args[0]
+
+    if not tag.strip():
+        raise ValueError("Tag cannot be empty.")
+
+    results = book.find_notes_by_tag(tag)
+    return "\n".join(str(n) for n in results) if results else "No notes with such tag."
+
+def show_notes_cmd(args, book: AddressBook):
+    if not book.notes:
+        return "No notes yet."
+    return "\n".join(f"{i}: {note}" for i, note in enumerate(book.notes))
+
+@input_error
+def edit_note_cmd(args, book: AddressBook):
+    if len(args) < 2:
+        return "Give me index and new text please."
+    
+    index = int(args[0])
+    new_text = " ".join(args[1:])
+    
+    book.edit_note_text(index, new_text)
+    return f"Note {index} updated."
+
+def sort_notes_cmd(args, book: AddressBook):
+    return book.sort_notes_by_tags()
+
 commands = {
     "hello": lambda args, book: "How can I help you?",
     "add": add_contact,
     "change": change_contact,
+    "delete": delete_contact,
     "phone": show_phone,
     "add-birthday": add_birthday,
     "show-birthday": show_birthday,
     "birthdays": birthdays,
-    "all":  show_all
+    "add-email": add_email,
+    "show-email": show_email,
+    "add-address": add_address,
+    "show-address": show_address, 
+    "all": show_all 
 }
 
-
-# @input_error
-def add_record(name:str, book:AddressBook):
-    # Check we have record
-    record = book.find(name)
-    if record:
-        raise Exception("We already have contact with such name")
-    record = Record(name)
-    book.add_record(record)
-    message = "Contact added"
-    return (message, record)
-
-# @input_error
-def find_record(name:str, book:AddressBook):
-    record = book.find(name)
-    if not record:
-        raise Exception(f"We don't have '{name}' contact")
-    message = f"Contact '{record.name.value}' found"
-    return (message, record)
-
-# @input_error
-def add_phone(name:str, record:Record):
-    # todo
-    return ("Phone added", record)
-
-# @input_error
-def del_phone(name:str, record:Record):
-    # todo
-    return ("Phone deleted", record)
-
-def get_birthdays(qnt:str, book:AddressBook):
-    message = ""
-    try:
-        cl_days = int(qnt)
-    except:
-        cl_days = 7
-        message += "It's not a number. I show birthdays for next week.\n"
-    for day in book.get_upcoming_birthdays(cl_days):
-        message += f'Congratulate {day["name"]} on {day["congratulation_date"]}\n'
-    if not message:
-        message = "There are no upcoming bithdays next week"
-    return (message, None)
-
-def show_book_info(book:add_record):
-    print(f"has {len(book)} records and N notes") # todo - notes size
-
-def show_record_info(record:Record):
-    print(f"{record.name} [{record.phones}] born on {record.birthday}") # todo - colorama formated output
-
-
-# old main with set of commands
 def main():
-    book = load_data()
-    greating()
+    # Get book (loaded or new) and message from load_data
+    book, execution_result = load_data()
+    print("Welcome to the assistant bot!")
+    # Warn user if we can't load book from file and use new one
+    print(execution_result)
     while True:
         user_input = input("Enter a command: ")
         command, *args = parse_input(user_input)
 
         if command in ("close", "exit"):
+            # Try to save book before exit
+            # If we can't save, print error message
+            execution_result = save_data(book)
+            if execution_result:
+                print(execution_result)
             print("Good bye!")
             break
         elif command in commands.keys():
             print(commands[command](args, book))
+             # Try to save book after each action
+            # If we can't save, print error message
+            execution_result = save_data(book)
+            if execution_result:
+                print(execution_result)
         else:
             print("Invalid command.")
-            print("Use one of: hello, add, change, phone, all, add-birthday, show-birthday, birthdays, exit/close")
-    save_data(book)
-
+            print("Use one of: hello, add, change, phone, all, add-birthday, show-birthday, birthdays," \
+            " add-note, show-note, add-tag, del-note, find-note, find-tag, edit-note, sort-notes, exit/close")
+            print("Use one of: hello, add, change, phone, all, add-birthday, show-birthday, birthdays, add-email, show-email, add-address, show-address, exit/close")
+  
 
 settings_menu = MenuLevel("Settings menu", [])
 record_menu = MenuLevel("Record menu", [], show_record_info)
@@ -388,4 +341,3 @@ def main_alt():
 if __name__ == "__main__":
     # main()
     main_alt()
-
