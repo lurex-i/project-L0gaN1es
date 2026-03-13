@@ -167,6 +167,9 @@ def edit_note_cmd(args, book: AddressBook):
     book.edit_note_text(index, new_text)
     return f"Note {index} updated."
 
+def sort_notes_cmd(args, book: AddressBook):
+    return book.sort_notes_by_tags()
+
 commands = {
     "hello": lambda args, book: "How can I help you?",
     "add": add_contact,
@@ -182,7 +185,8 @@ commands = {
     "del-note": del_note_cmd,
     "find-note": find_note_cmd,
     "find-tag": find_tag_cmd,
-    "edit-note": edit_note_cmd
+    "edit-note": edit_note_cmd,
+    "sort-notes": sort_notes_cmd
 }
 
 def main():
