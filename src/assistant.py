@@ -227,6 +227,7 @@ def edit_note_cmd(args, book: AddressBook):
 def sort_notes_cmd(args, book: AddressBook):
     return book.sort_notes_by_tags()
 
+
 commands = {
     "hello": lambda args, book: "How can I help you?",
     "add": add_contact,
@@ -251,39 +252,6 @@ commands = {
     "show-address": show_address, 
     "all": show_all 
 }
-
-def main():
-    # Get book (loaded or new) and message from load_data
-    book, execution_result = load_data()
-    print(random_image())
-    print("Welcome to the assistant bot!")
-    # Warn user if we can't load book from file and use new one
-    print(execution_result)
-    while True:
-        user_input = input("Enter a command: ")
-        command, *args = parse_input(user_input)
-
-        if command in ("close", "exit"):
-            # Try to save book before exit
-            # If we can't save, print error message
-            execution_result = save_data(book)
-            print(random_image())
-            if execution_result:
-                print(execution_result)
-            print("Good bye!")
-            break
-        elif command in commands.keys():
-            print(commands[command](args, book))
-             # Try to save book after each action
-            # If we can't save, print error message
-            execution_result = save_data(book)
-            if execution_result:
-                print(execution_result)
-        else:
-            print("Invalid command.")
-            print("Use one of: hello, add, change, phone, all, add-birthday, show-birthday, birthdays," \
-            " add-note, show-note, add-tag, del-note, find-note, find-tag, edit-note, sort-notes," \
-            "add-email, show-email, add-address, show-address, exit/close")
 
 
 def add_record(name:str, book:AddressBook):
@@ -431,6 +399,7 @@ def show_record_info(record:Record):
 settings_menu = MenuLevel("Settings menu", [])
 record_menu = MenuLevel("Record menu", [], show_record_info)
 book_menu = MenuLevel("Address Book menu", [], show_book_info)
+exit_menu = MenuLevel("", [])
 
 def init_menu():
     # Address book menu settings
@@ -471,6 +440,9 @@ def init_menu():
     book_menu.items.append(MenuItem("n", "Show notes", "", #hint="tag", 
                                     handler=show_notes, 
                                     next_level=book_menu))
+    book_menu.items.append(MenuItem("c", "Command style", "", #hint="tag", 
+                                    # handler=show_notes, 
+                                    next_level=exit_menu))
     # book_menu.items.append(MenuItem("8", "Settings", "",
     #                                 next_level=settings_menu))
 
@@ -505,25 +477,62 @@ def init_menu():
                                       next_level=settings_menu))
     settings_menu.items.append(MenuItem("0", "Back", next_level=book_menu))
 
-def main_alt():
-    book, execution_result = load_data()
-    print("Welcome to the assistant bot!")
-    # Warn user if we can't load book from file and use new one
-    print(execution_result)
+def operate_command(book):
+    while True:
+        user_input = input("Enter a command: ")
+        command, *args = parse_input(user_input)
+
+        if command in ("close", "exit"):
+            return 0
+        elif command == "menu":
+            return 1
+
+        elif command in commands.keys():
+            print(commands[command](args, book))
+             # Try to save book after each action
+            # If we can't save, print error message
+            execution_result = save_data(book)
+            if execution_result:
+                print(execution_result)
+        else:
+            print("Invalid command.")
+            print("Use one of: hello, add, change, phone, all, add-birthday, show-birthday, birthdays," \
+            " add-note, show-note, add-tag, del-note, find-note, find-tag, edit-note, sort-notes," \
+            "add-email, show-email, add-address, show-address, menu, exit/close")
+
+def operate_menu(book):
     init()
     init_menu()
-    print(random_image())
     menu = book_menu
     book_menu.set_object(book)
     while menu:
         menu.enter()
         menu = menu.make_step()
+        if menu == exit_menu:
+            return 2
+    return 0
 
-    save_data(book)
+def main():
+    # Get book (loaded or new) and message from load_data
+    book, execution_result = load_data()
     print(random_image())
+    print("Welcome to the assistant bot!")
+    # Warn user if we can't load book from file and use new one
+    print(execution_result)
+
+    mode = 1
+    while mode:
+        if mode == 1:
+            mode = operate_menu(book)
+        if mode == 2:
+            mode = operate_command(book)
+
+    execution_result = save_data(book)
+    print(random_image())
+    if execution_result:
+        print(execution_result)
     print("Good bye!")
 
 
 if __name__ == "__main__":
-    # main()
-    main_alt()
+    main()
