@@ -8,6 +8,7 @@ from persistence import save_data, load_data
 from note import Note
 from colorama import init, Fore, Style
 from menu import MenuItem, MenuLevel
+import random
 
 def input_error(func):
     def inner(*args, **kwargs):
@@ -295,7 +296,7 @@ def delete_record(name:str, book:AddressBook):
     record = book.find(name)
     if record == None:
         return ("We don't have contact with such name", book)
-    book.delete(record)
+    book.delete(name)
     message = f"Contact {name} deleted"
     return (message, book)
 
@@ -303,6 +304,7 @@ def find_record(name:str, book:AddressBook):
     record = book.find(name)
     if not record:
         raise Exception(f"We don't have '{name}' contact")
+        # return (f"We don't have '{name}' contact", None)
     message = f"Contact '{record.name}' found"
     return (message, record)
 
@@ -331,7 +333,7 @@ def get_birthdays(qnt:str, book:AddressBook):
     for day in book.get_upcoming_birthdays(cl_days):
         message += f'Congratulate {day["name"]} on {day["congratulation_date"]}\n'
     if not message:
-        message = "There are no upcoming bithdays next week"
+        message = f"There are no upcoming bithdays next {cl_days} days"
     return (message, None)
 
 def add_note(text:str, book: AddressBook):
@@ -392,20 +394,33 @@ def edit_note(text:str, book: AddressBook):
     return (f"Note {index} updated.", book)
 
 
+def add_email_item(email, record: Record):
+    record.add_email(email)
+    return (f"Email at {record.email} for {record.name} was added.", record)
+
+def set_address(addr:str, record: Record):   
+    record.add_address(addr)
+    return (f"Address at {record.address} for {record.name} was added.", record)
+
+def set_birthday(birthday:str, record: Record):
+    record.add_birthday(birthday)
+    return (f"Birthday at {record.birthday} for {name} was added.", record)
+
 
 def  show_book(none:str, book:AddressBook):
     message = "" 
     for name, phone in book.items():
-        message += f"{name} : {phone}\n"
-    return message 
+        message += f"{phone}\n"
+    print() 
+    return (message, book)
 
 def show_book_info(book:AddressBook):
-    print(f"has {len(book)} records and {len(book)} notes")
+    print(f"has {len(book)} records and {len(book.notes)} notes")
 
 def show_record_info(record:Record):
+    colors = [Fore.RED, Fore.BLUE, Fore.GREEN, Fore.MAGENTA]
     # print(f"{record}") # short version by __str__
-    #todo 
-    print(Fore.RED + f"Hero:{record.name}; Call:{record.phones}; Start:{record.birthday} ;Place:{record.add_address}; Dog:{record.email}" + Style.RESET_ALL)
+    print(random.choice(colors) + f"{record}" + Style.RESET_ALL) 
 
 
 
@@ -418,24 +433,30 @@ def init_menu():
     book_menu.items.append(MenuItem("1", "Add contact", "Enter contact name:", hint="John Snow", 
                                     handler=add_record, next_level=record_menu))
     book_menu.items.append(MenuItem("2", "Find contact", "Enter contact name:", hint="John Snow", 
-                                    handler=find_record, next_level=record_menu))
-    book_menu.items.append(MenuItem("D", "Del contact", "Enter contact to delete:",
-                                    handler=delete_record,
-                                    next_level=book_menu))
+                                    handler=find_record, next_level=record_menu, error="We don't have such contact"))
     book_menu.items.append(MenuItem("3", "Find phone", "Enter phone number:", hint="0xxxxxxxxx", 
                                     handler=find_phone,
                                     next_level=record_menu))
-    book_menu.items.append(MenuItem("4", "Add note", "Enter note text:", #hint="tag1,tag2; Remember this!", 
+    book_menu.items.append(MenuItem("4", "Add note", "Enter note text:",
                                     handler=add_note, 
                                     next_level=book_menu))
     book_menu.items.append(MenuItem("5", "Find note", "Enter keyword from note:", #"Enter tag/tags:", #hint="tag1[,tag2]",
                                     handler=find_note, 
                                     next_level=book_menu))
     book_menu.items.append(MenuItem("6", "Edit note", "Enter index and new note:", hint="2 Buy red ferrari.",
-                                    handler=find_note, 
+                                    handler=edit_note, 
                                     next_level=book_menu))
-    book_menu.items.append(MenuItem("d", "Del note", "Enter note's index to delete:", #hint="tag1[,tag2]",
+    book_menu.items.append(MenuItem("7", "Del note", "Enter note's index to delete:",
                                     handler=del_note, 
+                                    next_level=book_menu))
+    book_menu.items.append(MenuItem("8", "Closest birthdays", "How many days of the closest birthdays you want? ",
+                                    handler=get_birthdays, next_level=book_menu))
+    book_menu.items.append(MenuItem("9", "Show all", "", 
+                                    handler=show_book, 
+                                    next_level=book_menu))
+    book_menu.items.append(MenuItem("0", "Exit"))
+    book_menu.items.append(MenuItem("D", "Del contact", "Enter contact to delete:",
+                                    handler=delete_record,
                                     next_level=book_menu))
     book_menu.items.append(MenuItem("t", "Add tag", "Enter index and tags:", hint="1 tag1 tag2", 
                                     handler=add_tag, 
@@ -446,17 +467,8 @@ def init_menu():
     book_menu.items.append(MenuItem("n", "Show notes", "", #hint="tag", 
                                     handler=show_notes, 
                                     next_level=book_menu))
-
-    book_menu.items.append(MenuItem("7", "Closest birthdays", "How many days of the closest birthdays you want? ",
-                                    handler=get_birthdays, next_level=book_menu))
-    book_menu.items.append(MenuItem("8", "Settings", "",
-                                    next_level=settings_menu))
-    book_menu.items.append(MenuItem("0", "Exit"))
-
-    book_menu.items.append(MenuItem("a", "Show all", "", 
-                                    handler=show_book, 
-                                    next_level=book_menu))
-
+    # book_menu.items.append(MenuItem("8", "Settings", "",
+    #                                 next_level=settings_menu))
 
     # Record menu items
     record_menu.items.append(MenuItem("1", "Add phone", "Enter phone number:", hint="0xxxxxxxxx", 
@@ -464,18 +476,19 @@ def init_menu():
     record_menu.items.append(MenuItem("2", "Del phone", "Enter phone number:", hint="0xxxxxxxxx", 
                                       handler=del_phone, next_level=record_menu))
     record_menu.items.append(MenuItem("3", "Set address", "Enter home address:", 
-                                    #   handler=set_address, 
+                                      handler=set_address, 
                                       next_level=record_menu))
     record_menu.items.append(MenuItem("4", "Add mail", "Enter e-mail:", 
-                                    #   handler=set_mail, 
+                                      handler=add_email_item, 
                                       next_level=record_menu))
-    record_menu.items.append(MenuItem("5", "Del mail", "What e-mail do you want delete? ", 
-                                    #   handler=del_mail, 
-                                      next_level=record_menu))
-    record_menu.items.append(MenuItem("6", "Set birthday", "When he/she was born? ",  hint="DD.MM.YYYY",
-                                    #   handler=set_birthday, 
+    # record_menu.items.append(MenuItem("5", "Del mail", "What e-mail do you want delete? ", 
+    #                                   handler=del_mail_item, 
+    #                                   next_level=record_menu))
+    record_menu.items.append(MenuItem("5", "Set birthday", "When he/she was born? ",  hint="DD.MM.YYYY",
+                                      handler=set_birthday, 
                                       next_level=record_menu))
     record_menu.items.append(MenuItem("0", "Back", next_level=book_menu))
+
     # Settings menu items
     settings_menu.items.append(MenuItem("1", "Set family's tax: ", "Input average amount for a gift: ", 
                                     #   handler=set_family_tax, 

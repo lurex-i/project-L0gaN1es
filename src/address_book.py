@@ -26,11 +26,11 @@ class AddressBook(UserDict):
         name = name.capitalize()
         del self.data[name]
 
-    def get_upcoming_birthdays(self):
+    def get_upcoming_birthdays(self, days = 7):
         res_user_list = []
         now = datetime.today().date()
         for rec in self.data.values():
-            if not rec.birthday.value:
+            if not rec.birthday:
                 continue
             closest_bday = rec.birthday.value
             closest_bday = date.replace(closest_bday, year=now.year)
@@ -38,7 +38,7 @@ class AddressBook(UserDict):
             if((closest_bday - now).days < 0):
                 closest_bday = date.replace(closest_bday, year=now.year + 1)
             # Check birthday is next 7 days includes today
-            if((closest_bday - now).days < 7):
+            if((closest_bday - now).days < days):
                 #Correct congradulation day in case birthday is at weekend
                 congr_day = closest_bday if closest_bday.weekday() < 5 else closest_bday + timedelta(days=7-closest_bday.weekday())
                 res_user_list.append({"name":rec.name.value, 
