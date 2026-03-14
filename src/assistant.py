@@ -525,9 +525,7 @@ def main():
         if mode == 1:
             mode = operate_menu(book)
         if mode == 2:
-            mode = operate_command(book)
-
-    mode = operate_command(book)
+            mode = operate_command(book) 
 
     execution_result = save_data(book)
     print(random_image())
