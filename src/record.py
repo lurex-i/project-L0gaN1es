@@ -15,7 +15,18 @@ class Record:
         self.address = None
 
     def __str__(self):
-        return f"Contact name: {self.name.value}, phones: {'; '.join(p.value for p in self.phones)}"
+        # short version
+        # return f"Contact name: {self.name.value}, phones: {'; '.join(p.value for p in self.phones)}"
+        message = f"Contact name: {self.name.value}"
+        if len(self.phones):
+            message += f"; phones: {', '.join(p.value for p in self.phones)}"
+        if self.address:
+            message += f"; live in: {self.address}"
+        if self.email:
+            message += f"; mail: {self.email}"
+        if self.birthday:
+            message += f"; was born: {self.birthday}"
+        return message
 
     def add_birthday(self, birthday:str):
         self.birthday = Birthday(birthday)

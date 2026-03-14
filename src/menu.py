@@ -50,6 +50,7 @@ class MenuLevel():
                     break
                 elif event.name == "space":
                     sys.stdout.write(" ")
+                    buffer += " "
                     # sys.stdout.flush()
                 #todo - add esc combination 
                 elif event.name == "esc":
@@ -93,19 +94,26 @@ class MenuLevel():
             sys.stdout.flush()
 
         obj = None
+        has_error = False
         next = item.next_level
         if item.handler:
             try:
                 buffer = MenuLevel.read_parameter()
                 # Clear line from user input and our hint
-                print(" " * max(len(item.hint), len(buffer)))
+                # print(" " * max(len(item.hint), len(buffer)))
+                sys.stdout.write("\x1b[2K")
+                sys.stdout.write("\x1b[0G")
                 message, obj = item.handler(buffer, self.obj)
             except:
                 message, obj = (item.error, None)
                 next = self
+                has_error = True
             print(message) # todo
 
         if obj and item.next_level:
             item.next_level.set_object(obj)
+
+        if has_error:
+            return self
 
         return next
