@@ -10,7 +10,7 @@ def load_images_from_folder(folder_path):
                 images.append(file.read())
     return images
 
-images = load_images_from_folder("src\img")
+images = load_images_from_folder("src\\img")
 
 def random_image():
     return random.choice(images)

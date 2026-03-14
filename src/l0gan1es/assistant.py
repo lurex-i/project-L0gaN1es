@@ -59,7 +59,7 @@ def delete_contact(args, book:AddressBook):
 @input_error
 def show_phone(args, book:AddressBook):
     name = args[0]
-    name = name.capitalize()
+    # name = name.capitalize()
     record = book.find(name)
     if record == None:
         return "There is no such contact in the address book."
@@ -132,7 +132,12 @@ def show_birthday(args, book:AddressBook):
 @input_error
 def birthdays(args, book:AddressBook):
     message = ""
-    period = args[0] if args else "7"
+    period = 7
+    # period = args[0] if args else "7"
+    try:
+        period = int(args[0])
+    except:
+        period = 7
     for day in book.get_upcoming_birthdays(period):
         message += f'Congratulate {day["name"]} on {day["congratulation_date"]}\n'
     if not message:
@@ -376,7 +381,7 @@ def set_address(addr:str, record: Record):
 
 def set_birthday(birthday:str, record: Record):
     record.add_birthday(birthday)
-    return (f"Birthday at {record.birthday} for {name} was added.", record)
+    return (f"Birthday at {record.birthday} for {record.name} was added.", record)
 
 
 def  show_book(none:str, book:AddressBook):
@@ -390,8 +395,7 @@ def show_book_info(book:AddressBook):
     print(f"has {len(book)} records and {len(book.notes)} notes")
 
 def show_record_info(record:Record):
-    colors = [Fore.RED, Fore.BLUE, Fore.GREEN, Fore.MAGENTA]
-    # print(f"{record}") # short version by __str__
+    colors = [Fore.YELLOW, Fore.CYAN, Fore.BLUE, Fore.GREEN, Fore.MAGENTA]
     print(random.choice(colors) + f"{record}" + Style.RESET_ALL) 
 
 
@@ -501,8 +505,6 @@ def operate_command(book):
             "add-email, show-email, add-address, show-address, menu, exit/close")
 
 def operate_menu(book):
-    init()
-    init_menu()
     menu = book_menu
     book_menu.set_object(book)
     while menu:
@@ -519,6 +521,8 @@ def main():
     print("Welcome to the assistant bot!")
     # Warn user if we can't load book from file and use new one
     print(execution_result)
+    init()
+    init_menu()
 
     mode = 1
     while mode:
