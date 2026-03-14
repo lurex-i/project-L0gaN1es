@@ -9,6 +9,7 @@ from note import Note
 from colorama import init, Fore, Style
 from menu import MenuItem, MenuLevel
 import random
+from screensaver import random_image
 
 def input_error(func):
     def inner(*args, **kwargs):
@@ -131,10 +132,11 @@ def show_birthday(args, book:AddressBook):
 @input_error
 def birthdays(args, book:AddressBook):
     message = ""
-    for day in book.get_upcoming_birthdays():
+    period = args[0] if args else "7"
+    for day in book.get_upcoming_birthdays(period):
         message += f'Congratulate {day["name"]} on {day["congratulation_date"]}\n'
     if not message:
-        message = "There are no upcoming bithdays next week"
+        message = f"There are no upcoming bithdays in the next {period} days."
     return message
 
 def parse_input(user_input):
@@ -253,6 +255,7 @@ commands = {
 def main():
     # Get book (loaded or new) and message from load_data
     book, execution_result = load_data()
+    print(random_image())
     print("Welcome to the assistant bot!")
     # Warn user if we can't load book from file and use new one
     print(execution_result)
@@ -264,6 +267,7 @@ def main():
             # Try to save book before exit
             # If we can't save, print error message
             execution_result = save_data(book)
+            print(random_image())
             if execution_result:
                 print(execution_result)
             print("Good bye!")
@@ -277,9 +281,9 @@ def main():
                 print(execution_result)
         else:
             print("Invalid command.")
-            print("Use one of: hello, add, change, phone, all, add-birthday, show-birthday, birthdays, add-email, show-email, add-address, show-address, " \
-            " add-note, show-note, add-tag, del-note, find-note, find-tag, edit-note, sort-notes, exit/close")
-  
+            print("Use one of: hello, add, change, phone, all, add-birthday, show-birthday, birthdays," \
+            " add-note, show-note, add-tag, del-note, find-note, find-tag, edit-note, sort-notes," \
+            "add-email, show-email, add-address, show-address, exit/close")
 
 
 def add_record(name:str, book:AddressBook):
@@ -508,6 +512,7 @@ def main_alt():
     print(execution_result)
     init()
     init_menu()
+    print(random_image())
     menu = book_menu
     book_menu.set_object(book)
     while menu:
@@ -515,6 +520,7 @@ def main_alt():
         menu = menu.make_step()
 
     save_data(book)
+    print(random_image())
     print("Good bye!")
 
 
