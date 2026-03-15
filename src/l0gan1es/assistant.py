@@ -239,9 +239,39 @@ def edit_note_cmd(args, book: AddressBook):
 def sort_notes_cmd(args, book: AddressBook):
     return book.sort_notes_by_tags()
 
+def help():
+    print(
+    "Available commands:\n"
+    "hello - greeting\n"
+    "help - show available commands and syntax\n"
+    "add <name> <phone> - add contact with specified phone\n"
+    "change <name> <old_phone> <new_phone> - change contact phone\n"
+    "delete <name> - delete contact\n"
+    "phone <name> - show contact phones\n"
+    "add-birthday <name> <DD.MM.YYYY> - add birthday to contact\n"
+    "show-birthday <name> - show contact birthday\n"
+    "birthdays [days] - show upcoming birthdays in [days] (7 by default)\n"
+    "add-note <text> - add new note\n"
+    "show-notes - show all notes\n"
+    "add-tag <note_index> <tag> - add tag to note\n"
+    "del-note <note_index> - delete note\n"
+    "find-note <keyword> - find notes by keyword(s)\n"
+    "find-tag <tag> - find notes by tag\n"
+    "edit-note <note_index> <new_text> - edit note text\n"
+    "sort-notes - sort notes by tags\n"
+    "add-email <name> <email> - add email tot contact\n"
+    "show-email <name> - show email\n"
+    "add-address <name>:<address> - add address to contact\n"
+    "show-address <name> - show address\n"
+    "all - show all contacts\n"
+    "menu - switch to menu mode\n"
+    "exit - exit program\n"
+    "close - exit program"
+    )
 
 commands = {
     "hello": lambda args, book: "How can I help you?",
+    "help": lambda args, book: help(),
     "add": add_contact,
     "change": change_contact,
     "delete": delete_contact,
@@ -489,7 +519,7 @@ def init_menu():
 
 def operate_command(book):
     # Define available commands list for later command guessing
-    available_commands = list(commands.keys()).extend("close", "exit", "menu")
+    available_commands = list(commands.keys()) + ["close", "exit", "menu"]
 
     while True:
         user_input = input("Enter a command: ")
@@ -514,7 +544,7 @@ def operate_command(book):
         
         # Try to guess command from user's input. If possible, automatically executes command and warn user
         elif get_close_matches(command, available_commands, 1):
-            possible_commands = get_close_matches(command, available_commands, n = 5, cutoff = 0.3)
+            possible_commands = get_close_matches(command, available_commands, n = 5, cutoff = 0.4)
             if len(possible_commands) and len(args):
                 args_formatted = ", ".join(args)
                 print(f"Execute command: {possible_commands[0]} {args_formatted}")
