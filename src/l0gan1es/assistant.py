@@ -158,9 +158,11 @@ def parse_input(user_input):
 @input_error
 def  show_all(args, book:AddressBook):
     message = "" 
+    colors = [Fore.RED, Fore.BLUE, Fore.GREEN, Fore.MAGENTA]
     for name, phone in book.items():
-        message += f"{name} : {phone}\n"
-    return message 
+        record = (random.choice(colors) + f"{name} : {phone}\n" + Style.RESET_ALL) 
+        message += record
+    return message
 
 @input_error
 def add_note_cmd(args, book: AddressBook):
@@ -246,7 +248,6 @@ commands = {
     "add-birthday": add_birthday,
     "show-birthday": show_birthday,
     "birthdays": birthdays,
-    "all":  show_all,
     "add-note": add_note_cmd,
     "show-notes": show_notes_cmd,
     "add-tag": add_tag_cmd,
