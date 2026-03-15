@@ -488,25 +488,45 @@ def init_menu():
     settings_menu.items.append(MenuItem("0", "Back", next_level=book_menu))
 
 def operate_command(book):
+    # Define available commands list for later command guessing
+    available_commands = list(commands.keys()).extend("close", "exit", "menu")
+
     while True:
         user_input = input("Enter a command: ")
         command, *args = parse_input(user_input)
 
+        # Exit from assistent
         if command in ("close", "exit"):
             return 0
+        
+        # Switch to menu control mode
         elif command == "menu":
             return 1
 
+        # Execute command from commands dictionary
         elif command in commands.keys():
             print(commands[command](args, book))
-             # Try to save book after each action
+            # Try to save book after each action
             # If we can't save, print error message
             execution_result = save_data(book)
             if execution_result:
                 print(execution_result)
-        elif get_close_matches(command, list(commands.keys()), 1):
-            possible_command = ", ".join(get_close_matches(command, list(commands.keys()), n = 5, cutoff = 0.3))
-            print(f"Unknown command. Did you mean '{possible_command}'?")
+        
+        # Try to guess command from user's input. If possible, automatically executes command and warn user
+        elif get_close_matches(command, available_commands, 1):
+            possible_commands = get_close_matches(command, available_commands, n = 5, cutoff = 0.3)
+            if len(possible_commands) and len(args):
+                args_formatted = ", ".join(args)
+                print(f"Execute command: {possible_commands[0]} {args_formatted}")
+                print(commands[possible_commands[0]](args, book))
+                execution_result = save_data(book)
+                if execution_result:
+                    print(execution_result)
+            else:
+                possible_commands = ", ".join(possible_commands)
+                print(f"Unknown command. Did you mean '{possible_commands}'?")
+        
+        # If couldn't do anything with provided input
         else:
             print("Invalid command.")
             print("Use one of: hello, add, change, phone, all, add-birthday, show-birthday, birthdays," \
