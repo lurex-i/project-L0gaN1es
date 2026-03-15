@@ -10,6 +10,7 @@ from colorama import init, Fore, Style
 from menu import MenuItem, MenuLevel
 import random
 from screensaver import random_image
+from difflib import get_close_matches
 
 def input_error(func):
     def inner(*args, **kwargs):
@@ -503,6 +504,9 @@ def operate_command(book):
             execution_result = save_data(book)
             if execution_result:
                 print(execution_result)
+        elif get_close_matches(command, list(commands.keys()), 1):
+            possible_command = ", ".join(get_close_matches(command, list(commands.keys()), n = 5, cutoff = 0.3))
+            print(f"Unknown command. Did you mean '{possible_command}'?")
         else:
             print("Invalid command.")
             print("Use one of: hello, add, change, phone, all, add-birthday, show-birthday, birthdays," \
