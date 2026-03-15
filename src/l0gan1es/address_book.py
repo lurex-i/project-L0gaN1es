@@ -17,7 +17,7 @@ class AddressBook(UserDict):
         self.data[record.name.value] = record
 
     def find(self, name:str) -> Record:
-        name = name.capitalize()
+        # name = name.capitalize()
         if name in self.data.keys():
             return self.data[name]
         return None
@@ -26,13 +26,12 @@ class AddressBook(UserDict):
         return [record for record in self.data.values() if record.query_match(query)]
 
     def delete(self, name:str):
-        name = name.capitalize()
+        # name = name.capitalize()
         del self.data[name]
 
     def get_upcoming_birthdays(self, days = 7):
         res_user_list = []
         now = datetime.today().date()
-        period = int(period)
         for rec in self.data.values():
             if not rec.birthday:
                 continue

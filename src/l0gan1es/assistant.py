@@ -27,7 +27,9 @@ def input_error(func):
 
 @input_error
 def add_contact(args, book:AddressBook):
-    name, phone, *_ = args
+    # name, phone, *_ = args
+    *name, phone = args
+    name = ' '.join(name)
     record = book.find(name)
     message = "Contact updated"
     if record == None:
@@ -40,7 +42,8 @@ def add_contact(args, book:AddressBook):
 
 @input_error
 def change_contact(args, book:AddressBook):
-    name, phone, new_phone, *_ = args
+    *name, phone, new_phone = args
+    name = ' '.join(name)
     record = book.find(name)
     if record == None:
         return "There is no such contact in the address book."
@@ -49,7 +52,7 @@ def change_contact(args, book:AddressBook):
 
 @input_error
 def delete_contact(args, book:AddressBook):
-    name, *_ = args
+    name = ' '.join(args)
     record = book.find(name) 
     if record == None:
         return "There is no such contact in the address book."
@@ -58,8 +61,7 @@ def delete_contact(args, book:AddressBook):
 
 @input_error
 def show_phone(args, book:AddressBook):
-    name = args[0]
-    name = name.capitalize()
+    name = ' '.join(args)
     record = book.find(name)
     if record == None:
         return "There is no such contact in the address book."
@@ -67,7 +69,8 @@ def show_phone(args, book:AddressBook):
 
 @input_error
 def add_email(args, book:AddressBook):
-    name, email, *_ = args
+    *name, email = args
+    name = ' '.join(name)
     record = book.find(name)
     message = ""
     if record == None:
@@ -80,7 +83,7 @@ def add_email(args, book:AddressBook):
 
 @input_error
 def show_email(args, book:AddressBook):
-    name, *_ = args
+    name = ' '.join(args)
     record = book.find(name)
     if record == None:
         return f"There is no {name} in the address book."
@@ -88,8 +91,8 @@ def show_email(args, book:AddressBook):
 
 @input_error
 def add_address(args, book:AddressBook):   
-    name, *address = args
-    address = " ".join(address)
+    # name, *address = args
+    name, address = ' '.join(args).split(':')
     record = book.find(name)
     message = ""
     if record == None:
@@ -102,7 +105,7 @@ def add_address(args, book:AddressBook):
 
 @input_error
 def show_address(args, book:AddressBook):
-    name, *_ = args
+    name = ' '.join(args)
     record = book.find(name)
     if record == None:
         return f"There is no {name} in the address book."
@@ -110,7 +113,8 @@ def show_address(args, book:AddressBook):
 
 @input_error
 def add_birthday(args, book:AddressBook):
-    name, birthday, *_ = args
+    *name, birthday = args
+    name = ' '.join(name)
     record = book.find(name)
     message = ""
     if record == None:
@@ -123,7 +127,7 @@ def add_birthday(args, book:AddressBook):
 
 @input_error
 def show_birthday(args, book:AddressBook):
-    name, *_ = args
+    name = ' '.join(args)
     record = book.find(name)
     if record == None:
         return f"There is no {name} in the address book."
@@ -132,7 +136,12 @@ def show_birthday(args, book:AddressBook):
 @input_error
 def birthdays(args, book:AddressBook):
     message = ""
-    period = args[0] if args else "7"
+    period = 7
+    # period = args[0] if args else "7"
+    try:
+        period = int(args[0])
+    except:
+        period = 7
     for day in book.get_upcoming_birthdays(period):
         message += f'Congratulate {day["name"]} on {day["congratulation_date"]}\n'
     if not message:
@@ -376,7 +385,7 @@ def set_address(addr:str, record: Record):
 
 def set_birthday(birthday:str, record: Record):
     record.add_birthday(birthday)
-    return (f"Birthday at {record.birthday} for {name} was added.", record)
+    return (f"Birthday at {record.birthday} for {record.name} was added.", record)
 
 
 def  show_book(none:str, book:AddressBook):
@@ -390,8 +399,7 @@ def show_book_info(book:AddressBook):
     print(f"has {len(book)} records and {len(book.notes)} notes")
 
 def show_record_info(record:Record):
-    colors = [Fore.RED, Fore.BLUE, Fore.GREEN, Fore.MAGENTA]
-    # print(f"{record}") # short version by __str__
+    colors = [Fore.YELLOW, Fore.CYAN, Fore.BLUE, Fore.GREEN, Fore.MAGENTA]
     print(random.choice(colors) + f"{record}" + Style.RESET_ALL) 
 
 
@@ -437,7 +445,7 @@ def init_menu():
     book_menu.items.append(MenuItem("f", "Find tag", "Enter tag to find:", hint="tag", 
                                     handler=find_tag, 
                                     next_level=book_menu))
-    book_menu.items.append(MenuItem("n", "Show notes", "", #hint="tag", 
+    book_menu.items.append(MenuItem("n", "Show notes", "", hint="Press enter, please", 
                                     handler=show_notes, 
                                     next_level=book_menu))
     book_menu.items.append(MenuItem("c", "Command style", "", #hint="tag", 
@@ -501,8 +509,6 @@ def operate_command(book):
             "add-email, show-email, add-address, show-address, menu, exit/close")
 
 def operate_menu(book):
-    init()
-    init_menu()
     menu = book_menu
     book_menu.set_object(book)
     while menu:
@@ -519,6 +525,8 @@ def main():
     print("Welcome to the assistant bot!")
     # Warn user if we can't load book from file and use new one
     print(execution_result)
+    init()
+    init_menu()
 
     mode = 1
     while mode:

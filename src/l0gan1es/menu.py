@@ -25,8 +25,10 @@ class MenuLevel():
         print(self.name)
         if self.show_info:
             self.show_info(self.obj)
-        for item in self.items:
-            print(f"{item.key}. {item.name}   ", end='')
+        for index, item in enumerate(self.items):
+            print(f"{item.key}. {item.name:<18}   ", end='')
+            if (index + 1) % 6 == 0:
+                print()
         print()
     
     @staticmethod
