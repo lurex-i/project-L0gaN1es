@@ -441,7 +441,7 @@ def init_menu():
     book_menu.items.append(MenuItem("f", "Find tag", "Enter tag to find:", hint="tag", 
                                     handler=find_tag, 
                                     next_level=book_menu))
-    book_menu.items.append(MenuItem("n", "Show notes", "", #hint="tag", 
+    book_menu.items.append(MenuItem("n", "Show notes", "", hint="Press enter, please", 
                                     handler=show_notes, 
                                     next_level=book_menu))
     book_menu.items.append(MenuItem("c", "Command style", "", #hint="tag", 
