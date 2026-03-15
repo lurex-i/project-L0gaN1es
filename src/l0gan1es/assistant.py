@@ -27,7 +27,9 @@ def input_error(func):
 
 @input_error
 def add_contact(args, book:AddressBook):
-    name, phone, *_ = args
+    # name, phone, *_ = args
+    *name, phone = args
+    name = ' '.join(name)
     record = book.find(name)
     message = "Contact updated"
     if record == None:
@@ -40,7 +42,8 @@ def add_contact(args, book:AddressBook):
 
 @input_error
 def change_contact(args, book:AddressBook):
-    name, phone, new_phone, *_ = args
+    *name, phone, new_phone = args
+    name = ' '.join(name)
     record = book.find(name)
     if record == None:
         return "There is no such contact in the address book."
@@ -49,7 +52,7 @@ def change_contact(args, book:AddressBook):
 
 @input_error
 def delete_contact(args, book:AddressBook):
-    name, *_ = args
+    name = ' '.join(args)
     record = book.find(name) 
     if record == None:
         return "There is no such contact in the address book."
@@ -58,8 +61,7 @@ def delete_contact(args, book:AddressBook):
 
 @input_error
 def show_phone(args, book:AddressBook):
-    name = args[0]
-    # name = name.capitalize()
+    name = ' '.join(args)
     record = book.find(name)
     if record == None:
         return "There is no such contact in the address book."
@@ -67,7 +69,8 @@ def show_phone(args, book:AddressBook):
 
 @input_error
 def add_email(args, book:AddressBook):
-    name, email, *_ = args
+    *name, email = args
+    name = ' '.join(name)
     record = book.find(name)
     message = ""
     if record == None:
@@ -80,7 +83,7 @@ def add_email(args, book:AddressBook):
 
 @input_error
 def show_email(args, book:AddressBook):
-    name, *_ = args
+    name = ' '.join(args)
     record = book.find(name)
     if record == None:
         return f"There is no {name} in the address book."
@@ -88,8 +91,8 @@ def show_email(args, book:AddressBook):
 
 @input_error
 def add_address(args, book:AddressBook):   
-    name, *address = args
-    address = " ".join(address)
+    # name, *address = args
+    name, address = ' '.join(args).split(':')
     record = book.find(name)
     message = ""
     if record == None:
@@ -102,7 +105,7 @@ def add_address(args, book:AddressBook):
 
 @input_error
 def show_address(args, book:AddressBook):
-    name, *_ = args
+    name = ' '.join(args)
     record = book.find(name)
     if record == None:
         return f"There is no {name} in the address book."
@@ -110,7 +113,8 @@ def show_address(args, book:AddressBook):
 
 @input_error
 def add_birthday(args, book:AddressBook):
-    name, birthday, *_ = args
+    *name, birthday = args
+    name = ' '.join(name)
     record = book.find(name)
     message = ""
     if record == None:
@@ -123,7 +127,7 @@ def add_birthday(args, book:AddressBook):
 
 @input_error
 def show_birthday(args, book:AddressBook):
-    name, *_ = args
+    name = ' '.join(args)
     record = book.find(name)
     if record == None:
         return f"There is no {name} in the address book."
