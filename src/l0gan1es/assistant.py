@@ -10,6 +10,7 @@ from colorama import init, Fore, Style
 from menu import MenuItem, MenuLevel
 import random
 from screensaver import random_image
+from difflib import get_close_matches
 
 def input_error(func):
     def inner(*args, **kwargs):
@@ -238,9 +239,39 @@ def edit_note_cmd(args, book: AddressBook):
 def sort_notes_cmd(args, book: AddressBook):
     return book.sort_notes_by_tags()
 
+def help():
+    print(
+    "Available commands:\n"
+    "hello - greeting\n"
+    "help - show available commands and syntax\n"
+    "add <name> <phone> - add contact with specified phone\n"
+    "change <name> <old_phone> <new_phone> - change contact phone\n"
+    "delete <name> - delete contact\n"
+    "phone <name> - show contact phones\n"
+    "add-birthday <name> <DD.MM.YYYY> - add birthday to contact\n"
+    "show-birthday <name> - show contact birthday\n"
+    "birthdays [days] - show upcoming birthdays in [days] (7 by default)\n"
+    "add-note <text> - add new note\n"
+    "show-notes - show all notes\n"
+    "add-tag <note_index> <tag> - add tag to note\n"
+    "del-note <note_index> - delete note\n"
+    "find-note <keyword> - find notes by keyword(s)\n"
+    "find-tag <tag> - find notes by tag\n"
+    "edit-note <note_index> <new_text> - edit note text\n"
+    "sort-notes - sort notes by tags\n"
+    "add-email <name> <email> - add email tot contact\n"
+    "show-email <name> - show email\n"
+    "add-address <name>:<address> - add address to contact\n"
+    "show-address <name> - show address\n"
+    "all - show all contacts\n"
+    "menu - switch to menu mode\n"
+    "exit - exit program\n"
+    "close - exit program"
+    )
 
 commands = {
     "hello": lambda args, book: "How can I help you?",
+    "help": lambda args, book: help(),
     "add": add_contact,
     "change": change_contact,
     "delete": delete_contact,
@@ -487,22 +518,45 @@ def init_menu():
     settings_menu.items.append(MenuItem("0", "Back", next_level=book_menu))
 
 def operate_command(book):
+    # Define available commands list for later command guessing
+    available_commands = list(commands.keys()) + ["close", "exit", "menu"]
+
     while True:
         user_input = input("Enter a command: ")
         command, *args = parse_input(user_input)
 
+        # Exit from assistent
         if command in ("close", "exit"):
             return 0
+        
+        # Switch to menu control mode
         elif command == "menu":
             return 1
 
+        # Execute command from commands dictionary
         elif command in commands.keys():
             print(commands[command](args, book))
-             # Try to save book after each action
+            # Try to save book after each action
             # If we can't save, print error message
             execution_result = save_data(book)
             if execution_result:
                 print(execution_result)
+        
+        # Try to guess command from user's input. If possible, automatically executes command and warn user
+        elif get_close_matches(command, available_commands, 1):
+            possible_commands = get_close_matches(command, available_commands, n = 5, cutoff = 0.4)
+            if len(possible_commands) and len(args):
+                args_formatted = ", ".join(args)
+                print(f"Execute command: {possible_commands[0]} {args_formatted}")
+                print(commands[possible_commands[0]](args, book))
+                execution_result = save_data(book)
+                if execution_result:
+                    print(execution_result)
+            else:
+                possible_commands = ", ".join(possible_commands)
+                print(f"Unknown command. Did you mean '{possible_commands}'?")
+        
+        # If couldn't do anything with provided input
         else:
             print("Invalid command.")
             print("Use one of: hello, add, change, phone, all, add-birthday, show-birthday, birthdays," \
