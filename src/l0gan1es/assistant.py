@@ -64,9 +64,10 @@ def delete_contact(args, book:AddressBook):
 def show_phone(args, book:AddressBook):
     name = ' '.join(args)
     record = book.find(name)
+    colors = [Fore.YELLOW, Fore.CYAN, Fore.RED, Fore.GREEN, Fore.MAGENTA]
     if record == None:
         return "There is no such contact in the address book."
-    return f"{name} : {book[name]}."
+    return (random.choice(colors) + f"{name} : {book[name]}" + Style.RESET_ALL)
 
 @input_error
 def add_email(args, book:AddressBook):
@@ -162,7 +163,7 @@ def search_contacts(args, book:AddressBook):
     query = args
     search_string = (" ").join(query)
     found_records = book.search(search_string)
-    colors = [Fore.YELLOW, Fore.CYAN, Fore.BLUE, Fore.GREEN, Fore.MAGENTA]
+    colors = [Fore.YELLOW, Fore.CYAN, Fore.RED, Fore.GREEN, Fore.MAGENTA]
     for record in found_records:
         message += (random.choice(colors) + f"{record}\n" + Style.RESET_ALL)
     return message
@@ -170,7 +171,7 @@ def search_contacts(args, book:AddressBook):
 @input_error
 def  show_all(args, book:AddressBook):
     message = "" 
-    colors = [Fore.RED, Fore.BLUE, Fore.GREEN, Fore.MAGENTA]
+    colors = [Fore.YELLOW, Fore.CYAN, Fore.RED, Fore.GREEN, Fore.MAGENTA]
     for name, phone in book.items():
         record = (random.choice(colors) + f"{name} : {phone}\n" + Style.RESET_ALL) 
         message += record
@@ -432,18 +433,18 @@ def set_birthday(birthday:str, record: Record):
     return (f"Birthday at {record.birthday} for {record.name} was added.", record)
 
 
-def  show_book(none:str, book:AddressBook):
-    message = "" 
-    for name, phone in book.items():
-        message += f"{phone}\n"
-    print() 
+def show_book(none:str, book:AddressBook):
+    message = "\n"
+    colors = [Fore.YELLOW, Fore.CYAN, Fore.RED, Fore.GREEN, Fore.MAGENTA]
+    for name, record in book.items():
+        message += (random.choice(colors) + f"{record}\n" + Style.RESET_ALL)
     return (message, book)
 
 def show_book_info(book:AddressBook):
     print(f"has {len(book)} records and {len(book.notes)} notes")
 
 def show_record_info(record:Record):
-    colors = [Fore.YELLOW, Fore.CYAN, Fore.BLUE, Fore.GREEN, Fore.MAGENTA]
+    colors = [Fore.YELLOW, Fore.CYAN, Fore.RED, Fore.GREEN, Fore.MAGENTA]
     print(random.choice(colors) + f"{record}" + Style.RESET_ALL) 
 
 
