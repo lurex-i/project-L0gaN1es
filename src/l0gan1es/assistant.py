@@ -64,9 +64,10 @@ def delete_contact(args, book:AddressBook):
 def show_phone(args, book:AddressBook):
     name = ' '.join(args)
     record = book.find(name)
+    colors = [Fore.YELLOW, Fore.CYAN, Fore.RED, Fore.GREEN, Fore.MAGENTA]
     if record == None:
         return "There is no such contact in the address book."
-    return f"{name} : {book[name]}."
+    return (random.choice(colors) + f"{name} : {book[name]}" + Style.RESET_ALL)
 
 @input_error
 def add_email(args, book:AddressBook):
@@ -157,11 +158,22 @@ def parse_input(user_input):
     return cmd, *args
 
 @input_error
-def  show_all(args, book:AddressBook):
+def search_contacts(args, book:AddressBook):
+    message = ""
+    query = args
+    search_string = (" ").join(query)
+    found_records = book.search(search_string)
+    colors = [Fore.YELLOW, Fore.CYAN, Fore.RED, Fore.GREEN, Fore.MAGENTA]
+    for record in found_records:
+        message += (random.choice(colors) + f"{record}\n" + Style.RESET_ALL)
+    return message
+
+@input_error
+def show_all(args, book:AddressBook):
     message = "" 
-    colors = [Fore.RED, Fore.BLUE, Fore.GREEN, Fore.MAGENTA]
-    for name, phone in book.items():
-        record = (random.choice(colors) + f"{name} : {phone}\n" + Style.RESET_ALL) 
+    colors = [Fore.YELLOW, Fore.CYAN, Fore.RED, Fore.GREEN, Fore.MAGENTA]
+    for name, record in book.items():
+        record = (random.choice(colors) + f"{record}\n" + Style.RESET_ALL) 
         message += record
     return message
 
@@ -251,6 +263,7 @@ def help():
     "add-birthday <name> <DD.MM.YYYY> - add birthday to contact\n"
     "show-birthday <name> - show contact birthday\n"
     "birthdays [days] - show upcoming birthdays in [days] (7 by default)\n"
+    "search <query> - search all contacts which names and/or surnames include query"
     "add-note <text> - add new note\n"
     "show-notes - show all notes\n"
     "add-tag <note_index> <tag> - add tag to note\n"
@@ -279,6 +292,7 @@ commands = {
     "add-birthday": add_birthday,
     "show-birthday": show_birthday,
     "birthdays": birthdays,
+    "search": search_contacts,
     "add-note": add_note_cmd,
     "show-notes": show_notes_cmd,
     "add-tag": add_tag_cmd,
@@ -420,18 +434,18 @@ def set_birthday(birthday:str, record: Record):
     return (f"Birthday at {record.birthday} for {record.name} was added.", record)
 
 
-def  show_book(none:str, book:AddressBook):
-    message = "" 
-    for name, phone in book.items():
-        message += f"{phone}\n"
-    print() 
+def show_book(none:str, book:AddressBook):
+    message = "\n"
+    colors = [Fore.YELLOW, Fore.CYAN, Fore.RED, Fore.GREEN, Fore.MAGENTA]
+    for name, record in book.items():
+        message += (random.choice(colors) + f"{record}\n" + Style.RESET_ALL)
     return (message, book)
 
 def show_book_info(book:AddressBook):
     print(f"has {len(book)} records and {len(book.notes)} notes")
 
 def show_record_info(record:Record):
-    colors = [Fore.YELLOW, Fore.CYAN, Fore.BLUE, Fore.GREEN, Fore.MAGENTA]
+    colors = [Fore.YELLOW, Fore.CYAN, Fore.RED, Fore.GREEN, Fore.MAGENTA]
     print(random.choice(colors) + f"{record}" + Style.RESET_ALL) 
 
 
@@ -522,7 +536,7 @@ def operate_command(book):
     available_commands = list(commands.keys()) + ["close", "exit", "menu"]
 
     while True:
-        user_input = input("Enter a command: ")
+        user_input = input("Enter a command (menu - menu mode, help - command list, exit/close - exit): ")
         command, *args = parse_input(user_input)
 
         # Exit from assistent
@@ -559,9 +573,9 @@ def operate_command(book):
         # If couldn't do anything with provided input
         else:
             print("Invalid command.")
-            print("Use one of: hello, add, change, phone, all, add-birthday, show-birthday, birthdays," \
-            " add-note, show-note, add-tag, del-note, find-note, find-tag, edit-note, sort-notes," \
-            "add-email, show-email, add-address, show-address, menu, exit/close")
+            print("Use one of: hello, help, add, change, delete, phone, add-birthday, show-birthday, birthdays," \
+            " add-note, show-notes, add-tag, del-note, find-note, find-tag, edit-note, sort-notes," \
+            "add-email, show-email, add-address, show-address, all, menu, exit/close")
 
 def operate_menu(book):
     menu = book_menu
