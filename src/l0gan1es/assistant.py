@@ -169,11 +169,11 @@ def search_contacts(args, book:AddressBook):
     return message
 
 @input_error
-def  show_all(args, book:AddressBook):
+def show_all(args, book:AddressBook):
     message = "" 
     colors = [Fore.YELLOW, Fore.CYAN, Fore.RED, Fore.GREEN, Fore.MAGENTA]
-    for name, phone in book.items():
-        record = (random.choice(colors) + f"{name} : {phone}\n" + Style.RESET_ALL) 
+    for name, record in book.items():
+        record = (random.choice(colors) + f"{record}\n" + Style.RESET_ALL) 
         message += record
     return message
 
@@ -263,6 +263,7 @@ def help():
     "add-birthday <name> <DD.MM.YYYY> - add birthday to contact\n"
     "show-birthday <name> - show contact birthday\n"
     "birthdays [days] - show upcoming birthdays in [days] (7 by default)\n"
+    "search <query> - search all contacts which names and/or surnames include query"
     "add-note <text> - add new note\n"
     "show-notes - show all notes\n"
     "add-tag <note_index> <tag> - add tag to note\n"
@@ -535,7 +536,7 @@ def operate_command(book):
     available_commands = list(commands.keys()) + ["close", "exit", "menu"]
 
     while True:
-        user_input = input("Enter a command: ")
+        user_input = input("Enter a command (menu - menu mode, help - command list, exit/close - exit): ")
         command, *args = parse_input(user_input)
 
         # Exit from assistent
@@ -572,9 +573,9 @@ def operate_command(book):
         # If couldn't do anything with provided input
         else:
             print("Invalid command.")
-            print("Use one of: hello, add, change, phone, all, add-birthday, show-birthday, birthdays," \
-            " add-note, show-note, add-tag, del-note, find-note, find-tag, edit-note, sort-notes," \
-            "add-email, show-email, add-address, show-address, menu, exit/close")
+            print("Use one of: hello, help, add, change, delete, phone, add-birthday, show-birthday, birthdays," \
+            " add-note, show-notes, add-tag, del-note, find-note, find-tag, edit-note, sort-notes," \
+            "add-email, show-email, add-address, show-address, all, menu, exit/close")
 
 def operate_menu(book):
     menu = book_menu
