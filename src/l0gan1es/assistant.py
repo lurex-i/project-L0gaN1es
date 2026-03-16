@@ -252,7 +252,7 @@ def sort_notes_cmd(args, book: AddressBook):
     return book.sort_notes_by_tags()
 
 def help():
-    print(
+    return (
     "Available commands:\n"
     "hello - greeting\n"
     "help - show available commands and syntax\n"
@@ -417,7 +417,7 @@ def edit_note(text:str, book: AddressBook):
     except:
         return ("Index must be a number.", book)
     new_text = " ".join(note_body)
-    book.edit_note_text(index, new_text)
+    book.edit_note_text(i, new_text)
     return (f"Note {index} updated.", book)
 
 
