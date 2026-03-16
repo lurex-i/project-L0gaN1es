@@ -157,6 +157,17 @@ def parse_input(user_input):
     return cmd, *args
 
 @input_error
+def search_contacts(args, book:AddressBook):
+    message = ""
+    query = args
+    search_string = (" ").join(query)
+    found_records = book.search(search_string)
+    colors = [Fore.YELLOW, Fore.CYAN, Fore.BLUE, Fore.GREEN, Fore.MAGENTA]
+    for record in found_records:
+        message += (random.choice(colors) + f"{record}\n" + Style.RESET_ALL)
+    return message
+
+@input_error
 def  show_all(args, book:AddressBook):
     message = "" 
     colors = [Fore.RED, Fore.BLUE, Fore.GREEN, Fore.MAGENTA]
@@ -279,6 +290,7 @@ commands = {
     "add-birthday": add_birthday,
     "show-birthday": show_birthday,
     "birthdays": birthdays,
+    "search": search_contacts,
     "add-note": add_note_cmd,
     "show-notes": show_notes_cmd,
     "add-tag": add_tag_cmd,
